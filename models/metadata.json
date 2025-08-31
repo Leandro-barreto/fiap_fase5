@@ -1,0 +1,12 @@
+{
+  "id_cols": [
+    "vaga_id",
+    "codigo"
+  ],
+  "num_cols": [
+    "remuneracao_num",
+    "tempo_processamento"
+  ],
+  "cat_cols": [],
+  "threshold_lgbm": 0.6337636326233319
+}

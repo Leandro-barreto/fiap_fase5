@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / compiled files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# Virtual environment
+venv/
+.venv_fase5/
+env/
+.env/
+
+# Environment variables
+.env.example
+.env.*
+
+# Editor-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs and databases
+*.log
+*.sqlite3
+db.sqlite3
+
+# Test coverage
+.coverage
+.tox/
+
+# Distribution / build
+dist/
+build/
+*.egg-info/
+
+# Jupyter Notebook specific files
+.ipynb_checkpoints/
+
+#data
+data/raw/*.json
+data/raw/*zip
+data/raw/*txt
+data/processed/*.json
+data/processed/*.parquet

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Previsão de Preços de Ações</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+      }
+      label {
+        margin-right: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Prever preço de ações com LSTM</h1>
+    <p>
+      Este formulário envia uma requisição JSON para o endpoint
+      <code>/api/predict</code>. Você pode informar um ticker e uma
+      data (opcional). Se a data não for informada, a predição será
+      baseada na data atual.
+    </p>
+    <form id="predict-form" onsubmit="event.preventDefault(); return submitPrediction();">
+      <label>
+        Ticker:
+        <input id="ticker" name="ticker" placeholder="AAPL" required />
+      </label>
+      <label>
+        Data:
+        <input type="date" id="date" name="date" />
+      </label>
+      <button type="submit">Prever</button>
+    </form>
+    <h2>Resultado</h2>
+    <pre id="result">Nenhuma previsão ainda.</pre>
+    <script>
+      async function submitPrediction() {
+        const ticker = document.getElementById('ticker').value;
+        const date = document.getElementById('date').value;
+        try {
+          const response = await fetch('/api/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker: ticker, target_date: date || null })
+          });
+          if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Erro desconhecido');
+          }
+          const data = await response.json();
+          document.getElementById('result').textContent =
+            `Ticker: ${data.ticker}\nPreço previsto: ${data.predicted_close.toFixed(2)}\nData: ${data.prediction_date}`;
+        } catch (err) {
+          document.getElementById('result').textContent = `Erro: ${err.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>

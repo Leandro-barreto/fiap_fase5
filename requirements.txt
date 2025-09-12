@@ -5,7 +5,7 @@ numpy==1.26.4
 joblib==1.4.2
 lightgbm==4.6.0
 shap==0.48.0
-pyarrow=21.0.0
+pyarrow==21.0.0
 
 # API
 fastapi==0.112.0

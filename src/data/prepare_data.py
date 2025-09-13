@@ -1,32 +1,51 @@
-# src/data/prepare_data.py
+"""Prepare data for candidate hiring prediction.
+
+This module handles reading JSON input files and transforming them
+into a flattened pandas DataFrame suitable for feature engineering.
+It also exposes a ``build_dataset`` function that merges the
+applicants, prospects and vacancies (vagas) data into a single
+dataset and derives a binary label indicating whether the candidate
+was hired.  The implementation is adapted from the original
+``prepare_data.py`` script in the `fiap_fase5` repository【86947837380131†L25-L69】【86947837380131†L140-L239】.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
-import json
-import re
 from typing import Dict, List, Tuple
 
+import json
+import re
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
 from pandas.api.types import is_categorical_dtype, is_string_dtype, is_sparse, is_integer_dtype
 
-TECHS = [
-    "python","java","javascript","typescript","c#","c++","go","rust","ruby","php","scala",
-    "sql","nosql","mysql","postgres","mongodb","spark","hadoop","kafka","airflow",
-    "aws","gcp","azure","docker","kubernetes","terraform",
-    "pandas","numpy","sklearn","pytorch","tensorflow","keras","xgboost","lightgbm",
-    "fastapi","flask","django","react","vue","angular","excel","sap","power_bi","sql_server"
-]
+def load_json(path: Path) -> Dict:
+    """Load a JSON file into a Python dict.
 
-def load_json(path: Path):
+    Parameters
+    ----------
+    path : Path
+        Path to the JSON file.
+
+    Returns
+    -------
+    dict
+        Parsed JSON content.
+    """
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def flatten_applicants(raw: dict) -> pd.DataFrame:
-    rows = []
+def flatten_applicants(raw: Dict) -> pd.DataFrame:
+    """Flatten the nested applicants JSON into a DataFrame.
+
+    Each candidate record may contain several nested objects, e.g.
+    ``infos_basicas``.  This function expands those nested keys into
+    dot‑delimited column names【86947837380131†L25-L42】.
+    """
+    rows: List[Dict] = []
     for codigo, dados in (raw or {}).items():
-        flat = {"codigo_profissional": str(codigo)}
+        flat: Dict[str, str] = {"codigo_profissional": str(codigo)}
         for bloco, conteudo in (dados or {}).items():
             if isinstance(conteudo, dict):
                 for k, v in conteudo.items():
@@ -35,19 +54,24 @@ def flatten_applicants(raw: dict) -> pd.DataFrame:
                 flat[bloco] = conteudo
         rows.append(flat)
     df = pd.DataFrame(rows)
-    # alias útil
-    for col in ["infos_basicas.nome","informacoes_pessoais.nome"]:
+    # alias for candidate name
+    for col in ["infos_basicas.nome", "informacoes_pessoais.nome"]:
         if col in df.columns:
             df["nome_candidato"] = df[col]
             break
     return df
 
-def flatten_prospects(raw: dict) -> pd.DataFrame:
-    rows = []
+def flatten_prospects(raw: Dict) -> pd.DataFrame:
+    """Flatten the prospects JSON into a DataFrame.
+
+    Each vacancy (vaga) contains a list of prospects (applicants).  This
+    function extracts prospect attributes and normalizes date columns【86947837380131†L44-L68】.
+    """
+    rows: List[Dict] = []
     for vaga_id, vaga in (raw or {}).items():
         title = None
         modality = None
-        prospects = []
+        prospects: List[Dict] = []
         if isinstance(vaga, dict):
             title = vaga.get("titulo")
             modality = vaga.get("modalidade")
@@ -61,15 +85,17 @@ def flatten_prospects(raw: dict) -> pd.DataFrame:
                 rec["codigo"] = str(rec["codigo"]).strip()
             rows.append(rec)
     df = pd.DataFrame(rows)
+    # fix common typo
     if "situacao_candidado" in df.columns:
         df.rename(columns={"situacao_candidado": "situacao_candidato"}, inplace=True)
-    for c in ["data_candidatura","ultima_atualizacao"]:
+    for c in ["data_candidatura", "ultima_atualizacao"]:
         if c in df.columns:
             df[c] = pd.to_datetime(df[c], format="%d-%m-%Y", errors="coerce")
     return df
 
-def flatten_vagas(raw: dict) -> pd.DataFrame:
-    rows = []
+def flatten_vagas(raw: Dict) -> pd.DataFrame:
+    """Flatten the vacancies JSON into a DataFrame【86947837380131†L70-L97】."""
+    rows: List[Dict] = []
     for vaga_id, dados in (raw or {}).items():
         flat = {"vaga_id": str(vaga_id)}
         for bloco, conteudo in (dados or {}).items():
@@ -80,11 +106,10 @@ def flatten_vagas(raw: dict) -> pd.DataFrame:
                 flat[bloco] = conteudo
         rows.append(flat)
     df = pd.DataFrame(rows)
-    df.columns = [c.replace(" ", "_") for c in df.columns]
-    for c in ["informacoes_basicas.data_requicisao","informacoes_basicas.limite_esperado_para_contratacao"]:
+    # normalize dates and alias some useful fields
+    for c in ["informacoes_basicas.data_requicisao", "informacoes_basicas.limite_esperado_para_contratacao"]:
         if c in df.columns:
             df[c] = pd.to_datetime(df[c], format="%d-%m-%Y", errors="coerce")
-    # aliases
     if "informacoes_basicas.titulo_vaga" in df.columns:
         df["titulo_vaga"] = df["informacoes_basicas.titulo_vaga"]
     if "perfil_vaga.estado" in df.columns:
@@ -98,12 +123,22 @@ def flatten_vagas(raw: dict) -> pd.DataFrame:
     return df
 
 def parse_money(series: pd.Series) -> pd.Series:
+    """Convert a salary string into a numeric value【86947837380131†L99-L104】."""
     s = (series.astype(str)
          .str.replace(r"[^0-9,]", "", regex=True)
          .str.replace(",", ".", regex=False))
     return pd.to_numeric(s, errors="coerce")
 
-def keyword_overlap(a: str, b: str, keywords=TECHS) -> float:
+TECHS = [
+    "python","java","javascript","typescript","c#","c++","go","rust","ruby","php","scala",
+    "sql","nosql","mysql","postgres","mongodb","spark","hadoop","kafka","airflow",
+    "aws","gcp","azure","docker","kubernetes","terraform",
+    "pandas","numpy","sklearn","pytorch","tensorflow","keras","xgboost","lightgbm",
+    "fastapi","flask","django","react","vue","angular","excel","sap","power_bi","sql_server"
+]
+
+def keyword_overlap(a: str, b: str, keywords: List[str] = TECHS) -> float:
+    """Compute the keyword overlap between two texts【86947837380131†L105-L112】."""
     if not isinstance(a, str) or not isinstance(b, str):
         return 0.0
     A = {kw for kw in keywords if re.search(rf"\b{re.escape(kw)}\b", a.lower())}
@@ -113,38 +148,29 @@ def keyword_overlap(a: str, b: str, keywords=TECHS) -> float:
     return len(A & B) / max(1, len(A | B))
 
 def clean_cat(s: pd.Series) -> pd.Series:
+    """Normalize categorical strings by stripping and replacing common missing tokens【86947837380131†L114-L117】."""
     return (s.astype(str).str.strip()
             .replace(["", "nan", "NA", "None", "N/A", "vazio", "Vazio"], np.nan))
 
-def sanitize_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
-    """Converte dtypes problemáticos para o Arrow/Parquet."""
-    out = df.copy()
-    for c in out.columns:
-        try:
-            if is_categorical_dtype(out[c]) or is_string_dtype(out[c]):
-                out[c] = out[c].astype(object)
-        except Exception:
-            pass
-        try:
-            if is_integer_dtype(out[c]) and str(out[c].dtype).startswith(("Int", "UInt")):
-                out[c] = out[c].astype("float64")
-        except Exception:
-            pass
-        try:
-            if is_sparse(out[c]):
-                out[c] = out[c].sparse.to_dense()
-        except Exception:
-            pass
-        out[c] = out[c].apply(lambda x: str(x) if isinstance(x, (list, dict, set)) else x)
-    return out
+def build_dataset(data_dir: Path) -> Tuple[pd.DataFrame, pd.Series, Dict]:
+    """Construct the merged dataset and return features, label and metadata.
 
-def build_dataset(data_dir: Path, out_dir: Path|None=None):
+    Parameters
+    ----------
+    data_dir : Path
+        Directory containing the raw JSON files (``applicants.json``,
+        ``prospects.json`` and ``vagas.json``).
+
+    Returns
+    -------
+    X : pd.DataFrame
+        DataFrame of feature columns, including id columns.  Use
+        ``meta`` to decide which columns to use for modelling.
+    y : pd.Series
+        Binary target (1 = contratado/hired, 0 = outro).
+    meta : Dict
+        Dictionary with lists of numeric, categorical and id columns.
     """
-    Retorna:
-      X (features), y (label), meta (cols num/cat/id), df_full (join completo com ids)
-    Salva (opcional): data/processed/train.parquet (ou CSV fallback) e metadata.json
-    """
-    data_dir = Path(data_dir)
     apps = load_json(data_dir / "applicants.json")
     pros = load_json(data_dir / "prospects.json")
     vagas = load_json(data_dir / "vagas.json")
@@ -156,24 +182,25 @@ def build_dataset(data_dir: Path, out_dir: Path|None=None):
     if df_pro.empty:
         raise ValueError("prospects.json está vazio ou ausente.")
 
-    # Join
+    # joins
     df_app["codigo_profissional"] = df_app.get("codigo_profissional", pd.Series(dtype=str)).astype(str)
     df_pro["codigo"] = df_pro["codigo"].astype(str)
     df_join = df_pro.merge(df_app, left_on="codigo", right_on="codigo_profissional", how="left", suffixes=("_pro","_app"))
     df_full = df_join.merge(df_vag, on="vaga_id", how="left", suffixes=("","_vaga")) if not df_vag.empty else df_join.copy()
 
-    # Label
+    # label: hired indicator
     y = df_full["situacao_candidato"].astype(str).str.lower().str.contains("contratado").astype(int)
 
-    # Texto consolidado
+    # consolidate text fields
     cand_cols = [c for c in ["cv_pt","informacoes_profissionais.conhecimentos_tecnicos"] if c in df_full.columns]
     vaga_cols = [c for c in ["perfil_vaga.principais_atividades","perfil_vaga.competencia_tecnicas_e_comportamentais","titulo_vaga"] if c in df_full.columns]
     df_full["_cand_text"] = df_full[cand_cols].agg(lambda x: " ".join(x.fillna("").astype(str)), axis=1) if cand_cols else ""
     df_full["_vaga_text"] = df_full[vaga_cols].agg(lambda x: " ".join(x.fillna("").astype(str)), axis=1) if vaga_cols else ""
 
-    # Similaridade TF-IDF
+    # similarity (TF-IDF) and keyword overlap features
     corpus = pd.concat([df_full["_cand_text"], df_full["_vaga_text"]], axis=0).fillna("")
     if len(corpus) > 0:
+        from sklearn.feature_extraction.text import TfidfVectorizer
         tfidf = TfidfVectorizer(min_df=3, max_features=40000)
         mat = tfidf.fit_transform(corpus.values)
         n = len(df_full)
@@ -185,11 +212,9 @@ def build_dataset(data_dir: Path, out_dir: Path|None=None):
         df_full["sim_tfidf"] = sim_cosine
     else:
         df_full["sim_tfidf"] = 0.0
-
-    # Overlap de keywords
     df_full["overlap_kw"] = [keyword_overlap(ct, vt) for ct, vt in zip(df_full["_cand_text"], df_full["_vaga_text"])]
 
-    # Numéricas adicionais
+    # numeric features
     df_full["remuneracao_num"] = parse_money(df_full.get("informacoes_profissionais.remuneracao", pd.Series(dtype=str))).clip(0, 50000)
     if {"data_candidatura","ultima_atualizacao"}.issubset(df_full.columns):
         df_full["tempo_processamento"] = (df_full["ultima_atualizacao"] - df_full["data_candidatura"]).dt.days.clip(0, 200)
@@ -206,7 +231,7 @@ def build_dataset(data_dir: Path, out_dir: Path|None=None):
         "cand_missing_ratio","cand_text_len","vaga_text_len"
     ]
 
-    # Categóricas selecionadas
+    # selected categorical columns
     cat_map = {
         "nivel_academico": "formacao_e_idiomas.nivel_academico",
         "nivel_ingles": "formacao_e_idiomas.nivel_ingles",
@@ -216,7 +241,7 @@ def build_dataset(data_dir: Path, out_dir: Path|None=None):
         "recrutador": "recrutador",
         "analista_responsavel": "analista_responsavel",
     }
-    cat_cols = []
+    cat_cols: List[str] = []
     for out_col, src in cat_map.items():
         if src in df_full.columns:
             df_full[out_col] = clean_cat(df_full[src])
@@ -225,17 +250,4 @@ def build_dataset(data_dir: Path, out_dir: Path|None=None):
     id_cols = ["vaga_id","codigo"]
     X = df_full[id_cols + num_cols + cat_cols].copy()
     meta = {"num_cols": num_cols, "cat_cols": cat_cols, "id_cols": id_cols}
-
-    # Persistência
-    if out_dir is not None:
-        out_dir = Path(out_dir)
-        out_dir.mkdir(parents=True, exist_ok=True)
-        X_save = sanitize_for_parquet(X.assign(label=y))
-        try:
-            X_save.to_parquet(out_dir / "train.parquet", index=False, engine="pyarrow")
-        except Exception as e:
-            print(f"[WARN] Falha ao salvar Parquet com pyarrow: {e}\nSalvando CSV como fallback.")
-            X_save.to_csv(out_dir / "train.csv", index=False)
-        (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    return X, y, meta, df_full
+    return X, y, meta

@@ -6,6 +6,7 @@ joblib==1.4.2
 lightgbm==4.6.0
 shap==0.48.0
 pyarrow==21.0.0
+imbalanced-learn==0.14.0
 
 # API
 fastapi==0.112.0

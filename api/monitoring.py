@@ -1,20 +1,13 @@
-"""
-monitoring.py – integrate Prometheus instrumentation with FastAPI
-----------------------------------------------------------------
+"""Monitoring setup for the FastAPI application.
 
-This module wraps the Prometheus instrumentation provided by
-``prometheus_fastapi_instrumentator`` into a function that can be
-called during app startup.  See the original implementation in
-``api/monitoring.py``【629603242625605†L0-L3】 for a minimal example.
+This module exposes a simple helper to attach Prometheus instrumentation
+to a FastAPI app using ``prometheus_fastapi_instrumentator``.  When
+called, metrics will be available under the `/metrics` endpoint.
 """
 
 from prometheus_fastapi_instrumentator import Instrumentator
 
 
 def setup_monitoring(app) -> None:
-    """Register Prometheus instrumentation with the FastAPI app.
-
-    This function exposes an endpoint at ``/metrics`` that Prometheus
-    scrapes to collect metrics such as request latencies and counts.
-    """
+    """Attach Prometheus instrumentation to a FastAPI app."""
     Instrumentator().instrument(app).expose(app)

@@ -1,12 +1,10 @@
-"""
-main.py – entry point for the FastAPI application
--------------------------------------------------
+"""Entry point for the hiring prediction FastAPI application.
 
-This module creates and configures a FastAPI application.  It includes
-a simple home page rendered from an HTML template and registers the
-prediction routes.  Monitoring via Prometheus is also enabled.  The
-structure mirrors the example found in the original repository's
-``api/main.py``【285454945483553†L0-L18】.
+This module sets up a basic FastAPI app, configures monitoring and
+registers a route for candidate hiring predictions. The API is
+purposely simple: it exposes a single endpoint that accepts a CSV file
+containing feature columns and returns binary predictions (0 = não
+aprovado, 1 = aprovado).
 """
 
 from fastapi import FastAPI, Request
@@ -25,33 +23,22 @@ def create_app() -> FastAPI:
     FastAPI
         A configured FastAPI application ready to serve requests.
     """
-    app = FastAPI(title="ML Prediction API")
-
+    app = FastAPI(title="API de Predição de Contratação")
     # register monitoring before other routes
     setup_monitoring(app)
-
-    # configure template directory for the home page
-    templates = Jinja2Templates(directory="new_api/static")
+    # register prediction routes
+    app.include_router(predict_router, prefix="/api")
+    # configure template engine for the home page
+    templates = Jinja2Templates(directory="api_clean/static")
 
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request) -> HTMLResponse:
-        """Serve a simple home page with a form to trigger predictions.
-
-        This endpoint renders an HTML template that allows users to
-        specify a ticker and prediction date or upload a CSV file.  If
-        you don't need a front‑end, you can remove this route and rely
-        solely on the JSON/CSV prediction endpoints.
-        """
+        """Serve the landing page for candidate prediction."""
         return templates.TemplateResponse("home.html", {"request": request})
-
-    # include our prediction routes under the /api prefix
-    app.include_router(predict_router, prefix="/api")
 
     return app
 
 
-# if run as a script, start the application using uvicorn
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
-
     uvicorn.run(create_app(), host="0.0.0.0", port=8000)

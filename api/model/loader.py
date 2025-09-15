@@ -1,58 +1,38 @@
-"""
-loader.py – utilities to load ML models
---------------------------------------
+"""Model loader for the hiring prediction API.
 
-The ``load_model`` function looks up and loads a model file based
-on the ticker symbol.  In the original project this was a Keras
-model saved as ``models/lstm_model_<TICKER>.h5``【777383667817022†L4-L6】.
-
-Here we provide a skeleton implementation that can be adapted to the
-format of your attached model file.  You might use TensorFlow,
-scikit‑learn, or another library to load your model.  Replace the
-placeholder code with the appropriate loading logic for your project.
+The trained scikit‑learn pipeline is persisted as a Joblib file under
+``models/contratacao_model.joblib``.  This module provides a helper
+function to load that pipeline, ignoring any ticker or identifier.
 """
 
 import os
+import joblib
 from typing import Any
 
-import joblib
-from tensorflow.keras.models import load_model as keras_load_model  # Optional dependency
+MODEL_FILENAME = "contratacao_model.joblib"
+MODEL_DIR = "models"
+MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILENAME)
 
 
-def load_model(ticker: str) -> Any:
-    """Load a pre‑trained ML model for the given ticker.
-
-    This implementation attempts to load a Keras model saved under the
-    ``models`` directory following the naming convention
-    ``lstm_model_{ticker}.h5``.  If you are using a different model
-    format or file naming scheme, adjust the path and loading logic
-    accordingly.
+def load_model(_: str = "") -> Any:
+    """Load and return the hiring prediction pipeline.
 
     Parameters
     ----------
-    ticker : str
-        The stock ticker symbol that identifies which model to load.
+    _ : str, optional
+        Unused parameter kept for backward compatibility.  The model
+        loaded does not depend on a ticker or any external identifier.
 
     Returns
     -------
     Any
-        A loaded model object ready for inference.
+        A scikit‑learn pipeline containing preprocessing and classifier.
 
     Raises
     ------
     FileNotFoundError
         If the expected model file cannot be found.
     """
-    # Derive the expected filename
-    filename = f"lstm_model_{ticker}.h5"
-    model_path = os.path.join("models", filename)
-
-    # Fallback to look for a joblib model if the Keras model does not exist
-    joblib_path = os.path.join("models", f"{ticker}.pkl")
-
-    if os.path.exists(model_path):
-        return keras_load_model(model_path)
-    elif os.path.exists(joblib_path):
-        return joblib.load(joblib_path)
-    else:
-        raise FileNotFoundError(f"No model file found for ticker '{ticker}' at {model_path} or {joblib_path}")
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Modelo não encontrado em {MODEL_PATH}")
+    return joblib.load(MODEL_PATH)

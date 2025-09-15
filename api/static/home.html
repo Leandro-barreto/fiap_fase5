@@ -1,60 +1,332 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Previsão de Preços de Ações</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 2rem;
-      }
-      label {
-        margin-right: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Prever preço de ações com LSTM</h1>
-    <p>
-      Este formulário envia uma requisição JSON para o endpoint
-      <code>/api/predict</code>. Você pode informar um ticker e uma
-      data (opcional). Se a data não for informada, a predição será
-      baseada na data atual.
-    </p>
-    <form id="predict-form" onsubmit="event.preventDefault(); return submitPrediction();">
-      <label>
-        Ticker:
-        <input id="ticker" name="ticker" placeholder="AAPL" required />
-      </label>
-      <label>
-        Data:
-        <input type="date" id="date" name="date" />
-      </label>
-      <button type="submit">Prever</button>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predição de Contratação</title>
+  <!-- Import Google Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px 32px;
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    h2 {
+      font-size: 1.3rem;
+      margin: 24px 0 8px;
+      font-weight: 500;
+      color: #374151;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      background-color: #f9fafb;
+      color: #374151;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #2563eb;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #1e4bb8;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2563eb;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background-color: #f9fafb;
+      font-size: 0.95rem;
+    }
+    .result-box.approved {
+      border-color: #10b981;
+      background-color: #ecfdf5;
+      color: #065f46;
+    }
+    .result-box.rejected {
+      border-color: #ef4444;
+      background-color: #fef2f2;
+      color: #991b1b;
+    }
+    .section-divider {
+      height: 1px;
+      background-color: #e5e7eb;
+      margin: 32px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Predição de Contratação</h1>
+    <form id="form-predict">
+      <h2>Dados da Vaga</h2>
+      <label for="job_title">Título da vaga</label>
+      <input type="text" id="job_title" name="job_title" placeholder="Ex.: Cientista de Dados" required />
+
+      <label for="job_description">Descrição da vaga</label>
+      <textarea id="job_description" name="job_description" placeholder="Descreva responsabilidades, competências técnicas e comportamentais" rows="4"></textarea>
+
+      <label for="tipo_contratacao">Tipo de contratação</label>
+      <select id="tipo_contratacao" name="tipo_contratacao">
+        <option value="">Selecione...</option>
+        <option value="CLT">CLT</option>
+        <option value="PJ">PJ</option>
+        <option value="Estágio">Estágio</option>
+        <option value="Temporário">Temporário</option>
+      </select>
+
+      <label for="estado">Estado</label>
+      <input type="text" id="estado" name="estado" placeholder="Ex.: SP" />
+
+      <label for="cidade">Cidade</label>
+      <input type="text" id="cidade" name="cidade" placeholder="Ex.: São Paulo" />
+
+      <label for="remuneracao">Faixa salarial (R$)</label>
+      <input type="number" id="remuneracao" name="remuneracao" step="0.01" placeholder="Ex.: 15000" />
+
+      <h2>Dados do Candidato</h2>
+      <label for="cand_cv">Currículo ou resumo</label>
+      <textarea id="cand_cv" name="cand_cv" placeholder="Cole ou escreva o currículo" rows="4"></textarea>
+
+      <label for="cand_nivel_ingles">Nível de inglês</label>
+      <select id="cand_nivel_ingles" name="nivel_ingles">
+        <option value="">Selecione...</option>
+        <option value="Nenhum">Nenhum</option>
+        <option value="Básico">Básico</option>
+        <option value="Intermediário">Intermediário</option>
+        <option value="Avançado">Avançado</option>
+        <option value="Fluente">Fluente</option>
+        <option value="Nativo">Nativo</option>
+      </select>
+
+      <label for="cand_nivel_academico">Nível acadêmico</label>
+      <select id="cand_nivel_academico" name="nivel_academico">
+        <option value="">Selecione...</option>
+        <option value="Não informado">Não informado</option>
+        <option value="Ensino Médio">Ensino Médio</option>
+        <option value="Técnico">Técnico</option>
+        <option value="Bacharel">Bacharel</option>
+        <option value="Mestrado">Mestrado</option>
+        <option value="Doutorado">Doutorado</option>
+      </select>
+
+      <label for="cand_expectativa">Pretensão salarial (R$)</label>
+      <input type="number" id="cand_expectativa" name="expectativa_salario" step="0.01" placeholder="Ex.: 12000" />
+
+      <label for="recrutador">Recrutador (opcional)</label>
+      <input type="text" id="recrutador" name="recrutador" placeholder="Ex.: João Silva" />
+
+      <label for="analista_responsavel">Analista Responsável (opcional)</label>
+      <input type="text" id="analista_responsavel" name="analista_responsavel" placeholder="Ex.: Maria Souza" />
+
+      <button type="submit" id="btn-predict">Calcular Probabilidade</button>
+      <span id="spinner-json" class="spinner" style="display: none;"></span>
     </form>
-    <h2>Resultado</h2>
-    <pre id="result">Nenhuma previsão ainda.</pre>
-    <script>
-      async function submitPrediction() {
-        const ticker = document.getElementById('ticker').value;
-        const date = document.getElementById('date').value;
-        try {
-          const response = await fetch('/api/predict', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ticker: ticker, target_date: date || null })
-          });
-          if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || 'Erro desconhecido');
-          }
-          const data = await response.json();
-          document.getElementById('result').textContent =
-            `Ticker: ${data.ticker}\nPreço previsto: ${data.predicted_close.toFixed(2)}\nData: ${data.prediction_date}`;
-        } catch (err) {
-          document.getElementById('result').textContent = `Erro: ${err.message}`;
-        }
+
+    <div class="section-divider"></div>
+
+    <h3>Ou envie um arquivo CSV com as features</h3>
+    <input type="file" id="csv-file" accept=".csv" />
+    <button id="btn-upload">Enviar CSV</button>
+    <span id="spinner-csv" class="spinner" style="display: none;"></span>
+
+    <div id="result-box" class="result-box" style="display: none;"></div>
+    <div id="csv-result-box" class="result-box" style="display: none;"></div>
+  </div>
+
+  <script>
+    // Helper to update the result display
+    function showResult(text, approved, targetId) {
+      const box = document.getElementById(targetId);
+      box.style.display = 'block';
+      box.textContent = text;
+      box.classList.remove('approved', 'rejected');
+      if (approved === true) {
+        box.classList.add('approved');
+      } else if (approved === false) {
+        box.classList.add('rejected');
       }
-    </script>
-  </body>
+    }
+
+    // Submit handler for JSON form
+    document.getElementById('form-predict').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-predict');
+      const spinner = document.getElementById('spinner-json');
+      btn.disabled = true;
+      spinner.style.display = 'inline-block';
+      // Gather form values
+      const data = {
+        job_title: document.getElementById('job_title').value,
+        job_description: document.getElementById('job_description').value,
+        tipo_contratacao: document.getElementById('tipo_contratacao').value,
+        estado: document.getElementById('estado').value,
+        cidade: document.getElementById('cidade').value,
+        remuneracao: document.getElementById('remuneracao').value,
+        cv: document.getElementById('cand_cv').value,
+        nivel_ingles: document.getElementById('cand_nivel_ingles').value,
+        nivel_academico: document.getElementById('cand_nivel_academico').value,
+        expectativa_salario: document.getElementById('cand_expectativa').value,
+        recrutador: document.getElementById('recrutador').value,
+        analista_responsavel: document.getElementById('analista_responsavel').value,
+      };
+      fetch('/api/predict/candidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+        .then((res) => res.json())
+        .then((resp) => {
+          spinner.style.display = 'none';
+          btn.disabled = false;
+          if ('error' in resp || resp.detail) {
+            showResult('Erro: ' + (resp.detail || resp.error), null, 'result-box');
+            return;
+          }
+          const prob = resp.probability !== undefined ? resp.probability : 0;
+          const pred = resp.prediction !== undefined ? resp.prediction : 0;
+          const approved = pred === 1;
+          const pct = (prob * 100).toFixed(2) + '%';
+          let resultText = approved
+            ? 'Aprovado com probabilidade de ' + pct
+            : 'Não aprovado (probabilidade de aprovação: ' + pct + ')';
+          // Append feature values
+          if (resp.features) {
+            let featLines = '';
+            for (const [k, v] of Object.entries(resp.features)) {
+              featLines += `${k}: ${v}\n`;
+            }
+            resultText += '\n\nFeatures utilizados:\n' + featLines.trim();
+          }
+          showResult(resultText, approved, 'result-box');
+        })
+        .catch((err) => {
+          spinner.style.display = 'none';
+          btn.disabled = false;
+          showResult('Erro ao enviar requisição: ' + err, null, 'result-box');
+        });
+    });
+
+    // Upload handler for CSV
+    document.getElementById('btn-upload').addEventListener('click', function () {
+      const btn = this;
+      const spinner = document.getElementById('spinner-csv');
+      const fileInput = document.getElementById('csv-file');
+      if (!fileInput.files || !fileInput.files[0]) {
+        showResult('Selecione um arquivo CSV.', null, 'csv-result-box');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      btn.disabled = true;
+      spinner.style.display = 'inline-block';
+      fetch('/api/predict/candidate', {
+        method: 'POST',
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((resp) => {
+          spinner.style.display = 'none';
+          btn.disabled = false;
+          if ('error' in resp || resp.detail) {
+            showResult('Erro: ' + (resp.detail || resp.error), null, 'csv-result-box');
+            return;
+          }
+          const preds = resp.predictions || [];
+          const probs = resp.probabilities || [];
+          const feats = resp.features || [];
+          let lines = '';
+          for (let i = 0; i < preds.length; i++) {
+            const approved = preds[i] === 1;
+            const pct = (probs[i] * 100).toFixed(2) + '%';
+            const txt = approved
+              ? 'Registro ' + (i + 1) + ': Aprovado (' + pct + ')'
+              : 'Registro ' + (i + 1) + ': Não aprovado (' + pct + ')';
+            lines += txt + '\n';
+            if (feats[i]) {
+              // stringify features of this row
+              let featStr = '';
+              for (const [k, v] of Object.entries(feats[i])) {
+                featStr += `${k}: ${v}\n`;
+              }
+              lines += 'Features:\n' + featStr + '\n';
+            }
+          }
+          showResult(lines.trim(), null, 'csv-result-box');
+        })
+        .catch((err) => {
+          spinner.style.display = 'none';
+          btn.disabled = false;
+          showResult('Erro ao enviar requisição: ' + err, null, 'csv-result-box');
+        });
+    });
+  </script>
+</body>
 </html>

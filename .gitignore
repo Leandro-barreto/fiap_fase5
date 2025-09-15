@@ -43,3 +43,5 @@ data/raw/*zip
 data/raw/*txt
 data/processed/*.json
 data/processed/*.parquet
+training_dataset.csv
+

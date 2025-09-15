@@ -14,7 +14,8 @@ uvicorn[standard]==0.30.5
 python-multipart==0.0.9
 
 # Monitoramento e logging
-prometheus-client==0.20.0
+prometheus-fastapi-instrumentator==7.1.0
+prometheus_client==0.20.0
 loguru==0.7.2
 
 # Testes

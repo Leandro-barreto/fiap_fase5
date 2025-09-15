@@ -100,8 +100,8 @@ def train_model(
     )
 
     # Optional oversampling of the minority class (hired candidates)
-    # This step balances the classes by duplicating minority samples.  It can
-    # improve recall and F1 when the positive class is underrepresented.
+    # This step balances the classes by duplicating some minority samples.  The
+    # sampling_strategy parameter defines the desired ratio of minority to majority.
     ros = RandomOverSampler(sampling_strategy=0.2, random_state=random_state)
     X_train_bal, y_train_bal = ros.fit_resample(X_train, y_train)
     # Show class distribution before and after oversampling
@@ -136,6 +136,40 @@ def train_model(
     print(f"Acurácia: {acc:.4f}")
     print(f"F1-score: {f1:.4f}")
     print(f"AUC-ROC: {auc:.4f}")
+
+    # -----------------------------------------------------------------
+    # SHAP integration
+    #
+    # Compute SHAP values on a subset of the training data and persist
+    # the explainer for later use during inference.  If the ``shap``
+    # library is not installed, this step is skipped gracefully.
+    try:
+        import shap  # type: ignore
+        # Use a small subset of the training data for efficiency
+        sample_size = min(200, len(X_train_bal))
+        X_sample = X_train_bal.iloc[:sample_size]
+        y_sample = y_train_bal.iloc[:sample_size]
+        # Build an explainer appropriate for linear models.  We pass the
+        # model pipeline's predict_proba as the function to explain and
+        # supply the preprocessed training data as background.
+        # ``shap.Explainer`` automatically chooses a kernel or linear
+        # explainer based on the model passed.
+        explainer = shap.Explainer(model, X_sample)
+        shap_values = explainer(X_sample)
+        # Determine directory to persist artifacts
+        model_dir = Path("models")
+        model_dir.mkdir(exist_ok=True)
+        # Save the explainer object for inference
+        shap_path = model_dir / "shap_explainer.joblib"
+        joblib.dump(explainer, shap_path)
+        # Optionally save the sample shap values for offline analysis
+        shap_vals_path = model_dir / "shap_values_sample.joblib"
+        joblib.dump({"X_sample": X_sample, "shap_values": shap_values}, shap_vals_path)
+        print(f"Explainer SHAP salvo em {shap_path}")
+    except ImportError:
+        print("Biblioteca 'shap' não instalada; pulando geração de explicador SHAP.")
+    except Exception as exc:
+        print(f"Falha ao gerar ou salvar o explicador SHAP: {exc}")
 
     # Save model if requested
     if model_output is not None:

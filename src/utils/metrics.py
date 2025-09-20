@@ -2,7 +2,7 @@
 
 This module wraps common scoring functions to provide a consistent
 interface for computing evaluation metrics.  It currently supports
-accuracy and F1 score, but you can add other metrics as needed.
+accuracy and F1 score, but other metrics can be added as needed.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Iterable
 
 from sklearn.metrics import accuracy_score, f1_score
+
 
 def compute_accuracy(y_true: Iterable, y_pred: Iterable) -> float:
     """Compute classification accuracy.
@@ -27,6 +28,7 @@ def compute_accuracy(y_true: Iterable, y_pred: Iterable) -> float:
         Accuracy score.
     """
     return accuracy_score(y_true, y_pred)
+
 
 def compute_f1(y_true: Iterable, y_pred: Iterable) -> float:
     """Compute the F1 score for binary classification.

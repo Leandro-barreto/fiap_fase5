@@ -9,6 +9,7 @@ venv/
 .venv_fase5/
 env/
 .env/
+.coverage*
 
 # Environment variables
 .env.example

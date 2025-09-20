@@ -1,11 +1,13 @@
 """Entry point for the hiring prediction FastAPI application.
 
 This module sets up a basic FastAPI app, configures monitoring and
-registers a route for candidate hiring predictions. The API is
+registers a route for candidate hiring predictions.  The API is
 purposely simple: it exposes a single endpoint that accepts a CSV file
 containing feature columns and returns binary predictions (0 = não
 aprovado, 1 = aprovado).
 """
+
+from __future__ import annotations
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
@@ -56,4 +58,5 @@ def create_app() -> FastAPI:
 
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
+
     uvicorn.run(create_app(), host="0.0.0.0", port=8000)

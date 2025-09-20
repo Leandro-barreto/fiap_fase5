@@ -1,0 +1,14 @@
+pytest
+pytest-cov
+pytest-mock
+freezegun
+pyfakefs
+responses
+fastapi
+prometheus-fastapi-instrumentator
+imbalanced-learn
+joblib
+scikit-learn
+pandas
+numpy
+requests

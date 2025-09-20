@@ -2,9 +2,9 @@
 
 This module exposes functions to load a previously trained model
 (including its preprocessing pipeline) and to perform predictions on
-new data.  Because the model pipeline contains both the
-preprocessing and the classifier, input data should have the same
-feature columns used during training (excluding identifier columns).
+new data.  Because the model pipeline contains both the preprocessing
+and the classifier, input data should have the same feature columns
+used during training (excluding identifier columns).
 
 Example
 -------
@@ -14,17 +14,17 @@ Example
 >>> import pandas as pd
 >>> X_new = pd.DataFrame({...})  # columns must match training
 >>> probs = predict(model, X_new)
-
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable, Union
+from typing import Union
 
 import joblib
 import numpy as np
 import pandas as pd
+
 
 def load_pipeline(model_path: Union[str, Path]):
     """Load a trained pipeline from disk.
@@ -40,6 +40,7 @@ def load_pipeline(model_path: Union[str, Path]):
         The loaded scikit‑learn pipeline.
     """
     return joblib.load(model_path)
+
 
 def predict(model, X: pd.DataFrame) -> np.ndarray:
     """Predict labels for a batch of samples using the loaded model.
@@ -58,6 +59,7 @@ def predict(model, X: pd.DataFrame) -> np.ndarray:
         Array of predicted labels (0 or 1).
     """
     return model.predict(X)
+
 
 def predict_proba(model, X: pd.DataFrame) -> np.ndarray:
     """Return prediction probabilities for a batch of samples.

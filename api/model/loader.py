@@ -9,6 +9,7 @@ import os
 import joblib
 from typing import Any
 
+
 MODEL_FILENAME = "contratacao_model.joblib"
 MODEL_DIR = "models"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILENAME)

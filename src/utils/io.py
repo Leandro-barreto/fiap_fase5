@@ -14,6 +14,7 @@ from typing import Any, Dict
 import json
 import joblib
 
+
 def read_json(path: Path) -> Dict:
     """Read a JSON file into a Python dict.
 
@@ -30,6 +31,7 @@ def read_json(path: Path) -> Dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 def write_json(data: Dict, path: Path) -> None:
     """Write a dictionary to a JSON file.
 
@@ -44,6 +46,7 @@ def write_json(data: Dict, path: Path) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+
 def save_model(model: Any, path: Path) -> None:
     """Serialize a scikit‑learn model or pipeline using joblib.
 
@@ -56,6 +59,7 @@ def save_model(model: Any, path: Path) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, path)
+
 
 def load_model(path: Path) -> Any:
     """Load a model or pipeline from a joblib file.

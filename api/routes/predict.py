@@ -34,6 +34,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from ..model.loader import load_model
 
+
 router = APIRouter()
 
 # ---------------------------------------------------------------------------

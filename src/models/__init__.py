@@ -1,6 +1,5 @@
-"""Models subpackage initialization.
+"""Model package for the hiring prediction project.
 
-Contains training and inference routines for the hiring prediction model.
+This package exposes training and inference utilities for the hiring
+prediction model.  Refer to the individual modules for details.
 """
-
-__all__ = ["train", "infer"]

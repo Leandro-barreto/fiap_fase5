@@ -1,6 +1,6 @@
-"""Utilities subpackage initialization.
+"""Utility functions and helpers for the hiring prediction project.
 
-Utility functions for I/O, metrics and reproducibility.
+The ``utils`` package centralises various helper functions such as I/O
+operations, evaluation metrics and random seed configuration.  See the
+individual modules for more details.
 """
-
-__all__ = ["io", "metrics", "seed"]

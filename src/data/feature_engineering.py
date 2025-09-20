@@ -6,7 +6,7 @@ provides a function to split the input into model features and an
 optional function to construct a ``ColumnTransformer`` that applies
 scaling to numeric features and one‑hot encoding to categorical
 features.  The implementation is inspired by the training pipeline
-earlier created in ``training_pipeline.py``【86947837380131†L140-L239】.
+earlier created in ``training_pipeline.py``.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 from .prepare_data import build_dataset
+
 
 def load_features(data_dir: Path) -> Tuple[pd.DataFrame, pd.Series, Dict]:
     """Load the raw JSON files and return X, y and metadata.
@@ -42,6 +43,7 @@ def load_features(data_dir: Path) -> Tuple[pd.DataFrame, pd.Series, Dict]:
     """
     return build_dataset(data_dir)
 
+
 def split_features(X: pd.DataFrame, meta: Dict) -> pd.DataFrame:
     """Remove ID columns from the feature set.
 
@@ -63,6 +65,7 @@ def split_features(X: pd.DataFrame, meta: Dict) -> pd.DataFrame:
     """
     id_cols = meta.get("id_cols", [])
     return X.drop(columns=id_cols, errors="ignore")
+
 
 def get_preprocessor(meta: Dict) -> ColumnTransformer:
     """Construct a preprocessing transformer for numeric and categorical features.

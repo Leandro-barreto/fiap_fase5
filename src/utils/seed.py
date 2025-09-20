@@ -18,6 +18,7 @@ try:
 except ImportError:
     torch = None  # torch may not be installed
 
+
 def set_seed(seed: int) -> None:
     """Set random seed for Python, NumPy and optionally PyTorch.
 

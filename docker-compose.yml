@@ -1,4 +1,13 @@
+# Docker Compose configuration for the hiring prediction API, Prometheus
+# and Grafana.  This file wires together the three services without
+# creating dependency cycles and omits the obsolete `version` field.
+
 services:
+  # FastAPI application exposing the hiring prediction endpoints and
+  # Prometheus metrics.  The application uses Uvicorn to serve HTTP
+  # requests.  Metrics are available at /metrics and the landing page
+  # at /.  If you mount your source code for development, add
+  # `--reload` to the command.
   api:
     build: .
     container_name: contratacao-api
@@ -8,13 +17,19 @@ services:
     environment:
       - ENABLE_METRICS=true
       - PYTHONUNBUFFERED=1
+    # Healthcheck verifies that the server is responding.  The base
+    # image doesn't include wget/curl, so this uses Python's urllib
+    # instead.  Remove the healthcheck if it's not needed or if you
+    # install curl/wget in your Dockerfile.
     healthcheck:
-      # Dica: certifique-se de ter 'curl' ou 'wget' na imagem. Se não tiver, remova o healthcheck ou instale uma das ferramentas.
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ || curl -fsS http://localhost:8000/"]
+      test: ["CMD", "python", "-c", "import urllib.request, sys; import json; url='http://localhost:8000/health'; resp=urllib.request.urlopen(url); sys.exit(0 if resp.getcode()==200 else 1)"]
       interval: 15s
       timeout: 5s
       retries: 5
 
+  # Prometheus server to scrape metrics from the API.  The custom
+  # configuration file is mounted at runtime.  Prometheus will try
+  # scraping the API as soon as it is available.
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -28,8 +43,11 @@ services:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "9090:9090"
-    # (sem depends_on) – Prometheus pode iniciar sem a API; ele vai tentar coletar e, quando a API subir, começa a ter sucesso.
 
+  # Grafana with provisioning and dashboards configured.  The
+  # provisioning directories are mounted read-only and the data
+  # directory persists Grafana state across restarts.  Default
+  # credentials are provided via environment variables.
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -46,8 +64,6 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
-      # (opcional) - api
-      # - api
 
 volumes:
   prom-data:

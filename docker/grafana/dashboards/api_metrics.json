@@ -1,68 +1,206 @@
 {
-  "id": null,
-  "uid": "api-metrics",
-  "title": "API - Métricas (FastAPI/Prometheus)",
-  "timezone": "",
-  "schemaVersion": 38,
-  "version": 1,
-  "refresh": "10s",
-  "panels": [
-    {
-      "type": "stat",
-      "title": "Taxa de Requisições (5m)",
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 8,
-        "h": 5
-      },
-      "targets": [
+      "id": null,
+      "uid": null,
+      "title": "LSTM API Monitoramento",
+      "timezone": "browser",
+      "schemaVersion": 16,
+      "version": 1,
+      "refresh": "10s",
+      "panels": [
         {
-          "expr": "sum(rate(http_request_duration_seconds_count[5m]))",
-          "legendFormat": "req/s"
-        }
-      ]
-    },
-    {
-      "type": "graph",
-      "title": "Latência (p50/p90/p99) - 5m",
-      "gridPos": {
-        "x": 8,
-        "y": 0,
-        "w": 16,
-        "h": 9
-      },
-      "lines": true,
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p50"
+          "type": "graph",
+          "title": "\u23f1\ufe0f Tempo m\u00e9dio de resposta",
+          "datasource": "prometheus",
+          "id": 1,
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "rate(http_request_duration_seconds_sum[1m]) / rate(http_request_duration_seconds_count[1m])",
+              "interval": "",
+              "legendFormat": "{{handler}}",
+              "refId": "A"
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "xaxis": {
+            "show": true
+          }
         },
         {
-          "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p90"
+          "type": "graph",
+          "title": "\ud83d\udcc8 Taxa de requisi\u00e7\u00f5es por segundo",
+          "datasource": "prometheus",
+          "id": 2,
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "rate(http_requests_total[1m])",
+              "interval": "",
+              "legendFormat": "{{handler}}",
+              "refId": "A"
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "yaxes": [
+            {
+              "format": "req/s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "req/s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "xaxis": {
+            "show": true
+          }
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p99"
-        }
-      ]
-    },
-    {
-      "type": "table",
-      "title": "Requests por rota/método/status",
-      "gridPos": {
-        "x": 0,
-        "y": 5,
-        "w": 24,
-        "h": 9
-      },
-      "targets": [
+          "type": "graph",
+          "title": "\ud83d\udcbe Uso de Mem\u00f3ria RAM",
+          "datasource": "prometheus",
+          "id": 3,
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes / 1024 / 1024",
+              "interval": "",
+              "legendFormat": "{{handler}}",
+              "refId": "A"
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "yaxes": [
+            {
+              "format": "MB",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "MB",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "xaxis": {
+            "show": true
+          }
+        },
         {
-          "expr": "sum by (handler,method,status) (rate(http_request_duration_seconds_count[5m]))",
-          "legendFormat": "{{handler}} {{method}} {{status}}"
+          "type": "graph",
+          "title": "\ud83d\udd01 CPU total do processo",
+          "datasource": "prometheus",
+          "id": 4,
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "process_cpu_seconds_total",
+              "interval": "",
+              "legendFormat": "{{handler}}",
+              "refId": "A"
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "xaxis": {
+            "show": true
+          }
+        },
+        {
+          "type": "graph",
+          "title": "\ud83d\udea6 Requisi\u00e7\u00f5es por status",
+          "datasource": "prometheus",
+          "id": 5,
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum by (status) (rate(http_requests_total[1m]))",
+              "interval": "",
+              "legendFormat": "{{handler}}",
+              "refId": "A"
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "yaxes": [
+            {
+              "format": "req/s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "req/s",
+              "label": null,
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "xaxis": {
+            "show": true
+          }
         }
       ]
     }
-  ]
-}

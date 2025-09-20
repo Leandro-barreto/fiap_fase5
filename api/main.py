@@ -29,12 +29,27 @@ def create_app() -> FastAPI:
     # register prediction routes
     app.include_router(predict_router, prefix="/api")
     # configure template engine for the home page
+    # Use the 'api/static' directory for serving templates.  The former
+    # reference to 'api_clean/static' caused a runtime error when the
+    # directory structure was simplified.  Always point to the `api`
+    # package's static folder when configuring Jinja2 templates.
     templates = Jinja2Templates(directory="api/static")
 
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request) -> HTMLResponse:
         """Serve the landing page for candidate prediction."""
         return templates.TemplateResponse("home.html", {"request": request})
+
+    @app.get("/health")
+    async def health() -> dict[str, str]:
+        """Simple health check endpoint used by the Docker healthcheck.
+
+        Returns
+        -------
+        dict[str, str]
+            A JSON object indicating the service is operational.
+        """
+        return {"status": "ok"}
 
     return app
 

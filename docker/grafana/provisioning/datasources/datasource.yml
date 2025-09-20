@@ -1,6 +1,10 @@
 apiVersion: 1
 datasources:
-  - name: Prometheus
+  # Define the Prometheus data source used by Grafana.  The name must
+  # match the data source reference in the Grafana dashboards (all
+  # lowercase "prometheus"), otherwise panels will report that the
+  # data source cannot be found.
+  - name: prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090

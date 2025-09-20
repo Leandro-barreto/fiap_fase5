@@ -3,11 +3,14 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  # Scrape metrics from the FastAPI application.  The target
+  # references the service name and port exposed in docker-compose.
   - job_name: "api"
     metrics_path: /metrics
     static_configs:
       - targets: ["api:8000"]
 
+  # Scrape Prometheus itself for basic health metrics.
   - job_name: "prometheus"
     static_configs:
       - targets: ["prometheus:9090"]

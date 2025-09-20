@@ -29,7 +29,7 @@ def create_app() -> FastAPI:
     # register prediction routes
     app.include_router(predict_router, prefix="/api")
     # configure template engine for the home page
-    templates = Jinja2Templates(directory="api_clean/static")
+    templates = Jinja2Templates(directory="api/static")
 
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request) -> HTMLResponse:

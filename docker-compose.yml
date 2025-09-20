@@ -9,12 +9,11 @@ services:
       - ENABLE_METRICS=true
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8000/"]
+      # Dica: certifique-se de ter 'curl' ou 'wget' na imagem. Se não tiver, remova o healthcheck ou instale uma das ferramentas.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ || curl -fsS http://localhost:8000/"]
       interval: 15s
       timeout: 5s
       retries: 5
-    depends_on:
-      - prometheus
 
   prometheus:
     image: prom/prometheus:latest
@@ -29,8 +28,7 @@ services:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "9090:9090"
-    depends_on:
-      - api
+    # (sem depends_on) – Prometheus pode iniciar sem a API; ele vai tentar coletar e, quando a API subir, começa a ter sucesso.
 
   grafana:
     image: grafana/grafana:latest
@@ -48,6 +46,8 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+      # (opcional) - api
+      # - api
 
 volumes:
   prom-data:

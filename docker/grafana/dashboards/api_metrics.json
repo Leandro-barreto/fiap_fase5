@@ -1,0 +1,68 @@
+{
+  "id": null,
+  "uid": "api-metrics",
+  "title": "API - Métricas (FastAPI/Prometheus)",
+  "timezone": "",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Taxa de Requisições (5m)",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 5
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_count[5m]))",
+          "legendFormat": "req/s"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Latência (p50/p90/p99) - 5m",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 16,
+        "h": 9
+      },
+      "lines": true,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p90"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Requests por rota/método/status",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "expr": "sum by (handler,method,status) (rate(http_request_duration_seconds_count[5m]))",
+          "legendFormat": "{{handler}} {{method}} {{status}}"
+        }
+      ]
+    }
+  ]
+}

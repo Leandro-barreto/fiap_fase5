@@ -104,7 +104,7 @@ def generate_shap(model, X: pd.DataFrame, num_cols: list[str], cat_cols: list[st
     return shap_df
 
 
-def run_inference(model_path: Path, input_csv: Path, output_dir: Path) -> None:
+def run_inference(model_path: Path, input_csv: Path) -> None:
     """Executa a inferência em um conjunto de dados e grava resultados.
 
     Este método pode ser usado por outras aplicações (como um `main.py` ou
@@ -123,6 +123,8 @@ def run_inference(model_path: Path, input_csv: Path, output_dir: Path) -> None:
         "cand_missing_ratio",
         "cand_text_len",
         "vaga_text_len",
+        "same_state",
+        "same_region",
     ]
     cat_cols = [
         "nivel_academico",
@@ -132,6 +134,8 @@ def run_inference(model_path: Path, input_csv: Path, output_dir: Path) -> None:
         "cidade",
         "recrutador",
         "analista_responsavel",
+        "regiao_candidato",
+        "regiao_vaga",
     ]
     X = df[num_cols + cat_cols]
     # Previsões
@@ -139,17 +143,16 @@ def run_inference(model_path: Path, input_csv: Path, output_dir: Path) -> None:
     pred_class = predict(model, X)
     # Calcular SHAP
     shap_df = generate_shap(model, X, num_cols, cat_cols)
-    # Criar pasta
-    output_dir.mkdir(parents=True, exist_ok=True)
+
     # Salvar violin plot
-    plot_violin(shap_df, "Contribuições por característica (inferência)", output_dir / "shap_violin.png")
+    plot_violin(shap_df, "Contribuições por característica (inferência)", "models/assets/shap_violin.png")
     # Salvar previsões
     out_df = df.copy()
     out_df["pred_prob"] = pred_proba
     out_df["pred_class"] = pred_class
-    out_df.to_csv(output_dir / "inference_predictions.csv", index=False)
+    out_df.to_csv("models/assets/inference_predictions.csv", index=False)
     # Imprimir prévia
     print("Pré-visualização das previsões (primeiras 5 linhas):")
     print(out_df[["pred_prob", "pred_class"]].head())
-    print(f"Artefatos de inferência salvos em {output_dir}")
+    print(f"Artefatos de inferência salvos")
 

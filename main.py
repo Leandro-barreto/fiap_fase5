@@ -30,7 +30,7 @@ from typing import Optional
 import pandas as pd
 
 from src.models.train import train_model
-from src.models.infer import load_pipeline, predict, predict_proba
+from src.models.infer import load_pipeline, predict, predict_proba, run_inference
 
 
 def run_training(data_dir: Path, model_output: Optional[Path]) -> None:
@@ -47,7 +47,7 @@ def run_training(data_dir: Path, model_output: Optional[Path]) -> None:
     train_model(data_dir, model_output=model_output)
 
 
-def run_inference(model_path: Path, input_csv: Path) -> None:
+def run_inference_main(model_path: Path, input_csv: Path) -> None:
     """Run batch inference on a CSV of feature rows.
 
     Parameters
@@ -69,6 +69,8 @@ def run_inference(model_path: Path, input_csv: Path) -> None:
     # Output results to stdout
     for i, (label, prob) in enumerate(zip(preds, probs)):
         print(f"Row {i}: prediction={int(label)}, probability={prob:.4f}")
+    run_inference(model_path, input_csv)
+
 
 
 def parse_args() -> argparse.Namespace:
@@ -118,7 +120,7 @@ def main() -> None:
     if args.infer:
         if model_path is None or args.input_csv is None:
             raise SystemExit("--model-output and --input-csv must be specified for inference")
-        run_inference(model_path, Path(args.input_csv))
+        run_inference_main(model_path, Path(args.input_csv))
     # If neither flag is provided, print help
     if not args.train and not args.infer:
         print("No action specified. Use --train and/or --infer. See --help for details.")

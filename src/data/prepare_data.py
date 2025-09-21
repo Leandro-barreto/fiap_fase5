@@ -279,6 +279,45 @@ def build_dataset(data_dir: Path) -> Tuple[pd.DataFrame, pd.Series, Dict]:
     df_full["cand_text_len"] = df_full["_cand_text"].str.len()
     df_full["vaga_text_len"] = df_full["_vaga_text"].str.len()
 
+    # --------------------------------------------------------------------
+    # Additional geographic features
+    #
+    # Many hiring decisions may depend on the geographic proximity between a
+    # candidate and the job.  To capture these effects we derive a Brazilian
+    # region from the state (UF) and create boolean indicators for whether
+    # candidate and vacancy are in the same state and region.  The region
+    # mapping follows the official IBGE grouping.  Candidate state is
+    # extracted from the applicants data if available; otherwise it is
+    # treated as missing.  Missing or unknown regions default to "Desconhecida".
+    REGION_MAP = {
+        # Norte
+        "AC": "Norte", "AP": "Norte", "AM": "Norte", "PA": "Norte",
+        "RO": "Norte", "RR": "Norte", "TO": "Norte",
+        # Nordeste
+        "AL": "Nordeste", "BA": "Nordeste", "CE": "Nordeste", "MA": "Nordeste",
+        "PB": "Nordeste", "PE": "Nordeste", "PI": "Nordeste", "RN": "Nordeste",
+        "SE": "Nordeste",
+        # Sudeste
+        "SP": "Sudeste", "RJ": "Sudeste", "MG": "Sudeste", "ES": "Sudeste",
+        # Sul
+        "PR": "Sul", "SC": "Sul", "RS": "Sul",
+        # Centro‑Oeste
+        "DF": "Centro-Oeste", "GO": "Centro-Oeste", "MS": "Centro-Oeste", "MT": "Centro-Oeste",
+    }
+    # Derive vacancy region
+    df_full["regiao_vaga"] = df_full.get("estado").map(REGION_MAP).fillna("Desconhecida")
+    # Derive candidate state and region if present; otherwise fill with missing
+    cand_estado_col = "estado_candidato" if "estado_candidato" in df_full.columns else None
+    if cand_estado_col:
+        df_full["regiao_candidato"] = df_full[cand_estado_col].map(REGION_MAP).fillna("Desconhecida")
+        df_full["same_state"] = (df_full[cand_estado_col] == df_full["estado"]).astype(int)
+        df_full["same_region"] = (df_full["regiao_candidato"] == df_full["regiao_vaga"]).astype(int)
+    else:
+        # Without candidate state information the indicators default to 0
+        df_full["regiao_candidato"] = "Desconhecida"
+        df_full["same_state"] = 0
+        df_full["same_region"] = 0
+
     num_cols = [
         "sim_tfidf",
         "overlap_kw",
@@ -287,6 +326,9 @@ def build_dataset(data_dir: Path) -> Tuple[pd.DataFrame, pd.Series, Dict]:
         "cand_missing_ratio",
         "cand_text_len",
         "vaga_text_len",
+        # binary indicators for geographic proximity
+        "same_state",
+        "same_region",
     ]
 
     # selected categorical columns
@@ -298,6 +340,9 @@ def build_dataset(data_dir: Path) -> Tuple[pd.DataFrame, pd.Series, Dict]:
         "cidade": "cidade",
         "recrutador": "recrutador",
         "analista_responsavel": "analista_responsavel",
+        # region features
+        "regiao_candidato": "regiao_candidato",
+        "regiao_vaga": "regiao_vaga",
     }
     cat_cols: List[str] = []
     for out_col, src in cat_map.items():

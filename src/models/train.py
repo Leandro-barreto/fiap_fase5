@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import Optional
 
 import joblib
-from sklearn.linear_model import LogisticRegression
+# Use LightGBM for classification instead of LogisticRegression
+from lightgbm import LGBMClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import RandomOverSampler
@@ -51,6 +52,7 @@ def train_model(
     random_state : int, optional
         Random seed for the train/test split (default 42).
     """
+    print("Carregando e preparando dados...")
     # Load and prepare data
     X, y, meta = fe.load_features(data_dir)
     X_features = fe.split_features(X, meta)
@@ -97,6 +99,7 @@ def train_model(
     print(f"Tamanho do conjunto de treinamento: {orig_len}")
     print(f"Registros com NaN restantes após imputação: {remaining_nans}")
 
+    print("Dividindo em conjuntos de treino e teste...")
     # Split into train/test
     X_train, X_test, y_train, y_test = train_test_split(
         X_features,
@@ -106,6 +109,7 @@ def train_model(
         stratify=y,
     )
 
+    print("Realizando oversampling...")
     # Optional oversampling of the minority class (hired candidates).
     #
     # In production we use ``RandomOverSampler`` to balance the dataset by
@@ -129,6 +133,7 @@ def train_model(
         X_train_bal, y_train_bal = X_train, y_train
         print("Oversampling falhou para o conjunto atual; prosseguindo sem balanceamento.")
 
+    print("Construindo pipeline de pré‑processamento e modelo...")
     # Preprocessing
     # Build the preprocessing pipeline directly rather than delegating to
     # ``fe.get_preprocessor``.  During testing, ``fe.get_preprocessor`` is
@@ -157,15 +162,55 @@ def train_model(
     )
 
     # Model
-    # Use class_weight="balanced" to handle class imbalance
-    clf = LogisticRegression(max_iter=1000, n_jobs=-1, class_weight="balanced")
+    # Prefer LightGBM if available; fall back to LogisticRegression otherwise
+    if LGBMClassifier is not None:
+        clf = LGBMClassifier(
+            class_weight="balanced",
+            n_estimators=200,
+            learning_rate=0.1,
+            num_leaves=31,
+            random_state=random_state,
+        )
+    else:
+        from sklearn.linear_model import LogisticRegression
+
+        clf = LogisticRegression(max_iter=1000, n_jobs=-1, class_weight="balanced")
 
     # Build pipeline
     model = Pipeline(steps=[("preprocessor", preprocessor), ("classifier", clf)])
 
-    # Train using the oversampled data
+    # ---------------------------------------------------------------------
+    # Additional targeted oversampling of high‑similarity positive examples
+    #
+    # To further boost examples where candidate skills strongly match the job
+    # requirements, we replicate positive samples whose text similarity
+    # features exceed heuristically chosen thresholds.  This selective
+    # duplication increases their influence during model fitting without
+    # affecting negative or low‑similarity cases.  If the similarity
+    # columns are missing for some reason, this step is skipped.
+    if {
+        "sim_tfidf",
+        "overlap_kw",
+    }.issubset(X_train_bal.columns):
+        sim_threshold = 0.75
+        overlap_threshold = 0.5
+        high_sim_mask = (
+            (X_train_bal["sim_tfidf"] >= sim_threshold)
+            & (X_train_bal["overlap_kw"] >= overlap_threshold)
+            & (y_train_bal == 1)
+        )
+        if high_sim_mask.any():
+            X_dup = X_train_bal.loc[high_sim_mask]
+            y_dup = y_train_bal.loc[high_sim_mask]
+            # Append duplicated rows once.  Adjust duplication factor here
+            X_train_bal = pd.concat([X_train_bal, X_dup], ignore_index=True)
+            y_train_bal = pd.concat([y_train_bal, y_dup], ignore_index=True)
+
+    print("Treinando modelo...")
+    # Train using the oversampled (and possibly augmented) data
     model.fit(X_train_bal, y_train_bal)
 
+    print("Avaliando modelo nos dados de teste...")
     # Evaluate
     y_pred = model.predict(X_test)
     # Predict probabilities for AUC-ROC
@@ -183,34 +228,41 @@ def train_model(
     # Compute SHAP values on a subset of the training data and persist
     # the explainer for later use during inference.  If the ``shap``
     # library is not installed, this step is skipped gracefully.
+    print("Gerando explicações SHAP (se possível)...")
     try:
         import shap  # type: ignore
 
         # Use a small subset of the training data for efficiency
         sample_size = min(200, len(X_train_bal))
         X_sample = X_train_bal.iloc[:sample_size]
-        y_sample = y_train_bal.iloc[:sample_size]
-        # Build an explainer appropriate for linear models.  We pass the
-        # model pipeline's predict_proba as the function to explain and
-        # supply the preprocessed training data as background.
-        # ``shap.Explainer`` automatically chooses a kernel or linear
-        # explainer based on the model passed.
-        explainer = shap.Explainer(model, X_sample)
-        shap_values = explainer(X_sample)
-        # Determine directory to persist artifacts
-        model_dir = Path("models")
-        model_dir.mkdir(exist_ok=True)
-        # Save the explainer object for inference
-        shap_path = model_dir / "shap_explainer.joblib"
-        joblib.dump(explainer, shap_path)
-        # Optionally save the sample shap values for offline analysis
-        shap_vals_path = model_dir / "shap_values_sample.joblib"
-        joblib.dump({"X_sample": X_sample, "shap_values": shap_values}, shap_vals_path)
-        print(f"Explainer SHAP salvo em {shap_path}")
+        # Preprocess the sample for tree explainers if using LightGBM.  When the
+        # classifier is a LightGBM model, ``shap.TreeExplainer`` expects
+        # raw numeric features.  We therefore transform the sample using
+        # the fitted preprocessor.  For other estimators we fall back
+        # to the generic Explainer on the pipeline.
+        try:
+            if LGBMClassifier is not None and isinstance(clf, LGBMClassifier):
+                # Preprocess features and use TreeExplainer on the classifier
+                X_shap = preprocessor.transform(X_sample)
+                explainer = shap.TreeExplainer(clf)
+                shap_values = explainer.shap_values(X_shap)
+            else:
+                # Generic case: use shap.Explainer on the entire pipeline
+                explainer = shap.Explainer(model, X_sample)
+                shap_values = explainer(X_sample)
+            # Determine directory to persist artifacts
+            model_dir = Path("models")
+            model_dir.mkdir(exist_ok=True)
+            shap_path = model_dir / "shap_explainer.joblib"
+            joblib.dump(explainer, shap_path)
+            shap_vals_path = model_dir / "shap_values_sample.joblib"
+            joblib.dump({"X_sample": X_sample, "shap_values": shap_values}, shap_vals_path)
+            print(f"Explainer SHAP salvo em {shap_path}")
+        except Exception as shap_exc:
+            # If any error occurs during SHAP computation, warn and skip
+            print(f"Falha ao gerar ou salvar o explicador SHAP: {shap_exc}")
     except ImportError:
         print("Biblioteca 'shap' não instalada; pulando geração de explicador SHAP.")
-    except Exception as exc:
-        print(f"Falha ao gerar ou salvar o explicador SHAP: {exc}")
 
     # Save model if requested
     if model_output is not None:

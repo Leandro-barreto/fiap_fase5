@@ -297,6 +297,7 @@ def train_model(
     # Model
     # Prefer LightGBM if available; fall back to LogisticRegression otherwise
     if LGBMClassifier is not None:
+        print('LGBM------')
         clf = LGBMClassifier(
             class_weight="balanced",
             n_estimators=200,
@@ -344,8 +345,12 @@ def train_model(
     model.fit(X_train_bal, y_train_bal)
 
     # Previsões
+    print("COLUMNS:")
+    print(X_test.columns)
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
+
+    
 
     # Métricas
     acc = accuracy_score(y_test, y_pred)

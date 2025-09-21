@@ -95,7 +95,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model-output",
         type=str,
-        default="models/contratacao_model.joblib",
+        default="models/lgbm_model2.joblib",
         help="Path to save or load the trained model.",
     )
     parser.add_argument(

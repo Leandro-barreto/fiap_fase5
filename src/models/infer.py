@@ -103,6 +103,21 @@ def generate_shap(model, X: pd.DataFrame, num_cols: list[str], cat_cols: list[st
     shap_df = aggregate_shap(shap_values, feature_names, num_cols, cat_cols)
     return shap_df
 
+def get_original_features(model):
+    feature_names = model.named_steps["preprocessor"].get_feature_names_out()
+    num_cols = sorted({name.split("__")[1] for name in feature_names if name.startswith("num__")})
+    cat_cols = [
+        "nivel_academico",
+        "nivel_ingles",
+        "tipo_contratacao",
+        "estado",
+        "cidade",
+        "recrutador",
+        "analista_responsavel",
+        "regiao_vaga",
+        "regiao_candidato",
+    ]
+    return num_cols, cat_cols
 
 def run_inference(model_path: Path, input_csv: Path) -> None:
     """Executa a inferência em um conjunto de dados e grava resultados.
@@ -114,38 +129,21 @@ def run_inference(model_path: Path, input_csv: Path) -> None:
     model = joblib.load(model_path)
     # Ler dados
     df = pd.read_csv(input_csv)
-    # Definir colunas
-    num_cols = [
-        "sim_tfidf",
-        "overlap_kw",
-        "remuneracao_num",
-        "tempo_processamento",
-        "cand_missing_ratio",
-        "cand_text_len",
-        "vaga_text_len",
-        "same_state",
-        "same_region",
-    ]
-    cat_cols = [
-        "nivel_academico",
-        "nivel_ingles",
-        "tipo_contratacao",
-        "estado",
-        "cidade",
-        "recrutador",
-        "analista_responsavel",
-        "regiao_candidato",
-        "regiao_vaga",
-    ]
+    num_cols, cat_cols = get_original_features(model)
+    print("num_cols")
+    print(num_cols)
+    print("cat_cols")
+    print(cat_cols)
+
     X = df[num_cols + cat_cols]
     # Previsões
     pred_proba = predict_proba(model, X)
     pred_class = predict(model, X)
-    # Calcular SHAP
-    shap_df = generate_shap(model, X, num_cols, cat_cols)
+    # # Calcular SHAP
+    # shap_df = generate_shap(model, X, num_cols, cat_cols)
 
-    # Salvar violin plot
-    plot_violin(shap_df, "Contribuições por característica (inferência)", "models/assets/shap_violin.png")
+    # # Salvar violin plot
+    # plot_violin(shap_df, "Contribuições por característica (inferência)", "models/assets/shap_violin.png")
     # Salvar previsões
     out_df = df.copy()
     out_df["pred_prob"] = pred_proba

@@ -22,7 +22,10 @@ from typing import Optional
 
 import joblib
 # Use LightGBM for classification instead of LogisticRegression
-from lightgbm import LGBMClassifier
+try:
+    from lightgbm import LGBMClassifier  # type: ignore
+except ImportError:
+    LGBMClassifier = None  # fallback will be handled during model creation
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import RandomOverSampler
@@ -97,6 +100,7 @@ def train_model(
     # Count how many rows still contain NaNs after filling (should be zero)
     remaining_nans = X_features.isna().any(axis=1).sum()
     print(f"Tamanho do conjunto de treinamento: {orig_len}")
+    print(f"Cols: {X_features.columns}")
     print(f"Registros com NaN restantes após imputação: {remaining_nans}")
 
     print("Dividindo em conjuntos de treino e teste...")

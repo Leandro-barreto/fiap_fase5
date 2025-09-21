@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--train",
         action="store_true",
-        help="Run model training.  Requires --data-dir.",
+        help="Run model training.",
     )
     parser.add_argument(
         "--infer",

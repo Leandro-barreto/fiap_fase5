@@ -1,3 +1,4 @@
+
 sim_tfidf,overlap_kw,remuneracao_num,tempo_processamento,cand_missing_ratio,cand_text_len,vaga_text_len,nivel_academico,nivel_ingles,tipo_contratacao,estado,cidade,recrutador,analista_responsavel
 0.9,0.8,15000,20,0.05,3000,2500,Mestrado,Avançado,CLT,SP,São Paulo,Recrutador A,Analista X
 0.8,0.7,18000,10,0.1,3500,2000,Doutorado,Fluente,PJ,RJ,Rio de Janeiro,Recrutador B,Analista Y

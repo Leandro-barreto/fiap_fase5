@@ -1,10 +1,10 @@
-"""Entry point for the hiring prediction FastAPI application.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+main.py
+=======
+Entry point da API FastAPI para predição de contratação.
 
-This module sets up a basic FastAPI app, configures monitoring and
-registers a route for candidate hiring predictions.  The API is
-purposely simple: it exposes a single endpoint that accepts a CSV file
-containing feature columns and returns binary predictions (0 = não
-aprovado, 1 = aprovado).
 """
 
 from __future__ import annotations
@@ -12,51 +12,43 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from .routes.predict import router as predict_router
 from .monitoring import setup_monitoring
 
 
 def create_app() -> FastAPI:
-    """Instantiate and configure the FastAPI application.
-
-    Returns
-    -------
-    FastAPI
-        A configured FastAPI application ready to serve requests.
-    """
+    """Instancia e configura a aplicação FastAPI."""
     app = FastAPI(title="API de Predição de Contratação")
-    # register monitoring before other routes
+
+    # --- Monitoring (Prometheus / Grafana) ---
+    # Ex.: expõe /metrics e adiciona middlewares de latência/contagem.
     setup_monitoring(app)
-    # register prediction routes
-    app.include_router(predict_router, prefix="/api")
-    # configure template engine for the home page
-    # Use the 'api/static' directory for serving templates.  The former
-    # reference to 'api_clean/static' caused a runtime error when the
-    # directory structure was simplified.  Always point to the `api`
-    # package's static folder when configuring Jinja2 templates.
+
+    # --- Static & Templates ---
+    # monta a pasta /static para servir assets se necessário no futuro
+    app.mount("/static", StaticFiles(directory="api/static"), name="static")
     templates = Jinja2Templates(directory="api/static")
 
+    # --- Rotas de Predição ---
+    # sem prefixo, pois o front consome /predict/... diretamente
+    app.include_router(predict_router)
+
+    # --- Home ---
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request) -> HTMLResponse:
-        """Serve the landing page for candidate prediction."""
         return templates.TemplateResponse("home.html", {"request": request})
 
+    # --- Healthcheck simples ---
     @app.get("/health")
     async def health() -> dict[str, str]:
-        """Simple health check endpoint used by the Docker healthcheck.
-
-        Returns
-        -------
-        dict[str, str]
-            A JSON object indicating the service is operational.
-        """
         return {"status": "ok"}
 
     return app
 
 
+# Execução direta (útil em dev/local)
 if __name__ == "__main__":  # pragma: no cover
     import uvicorn
-
-    uvicorn.run(create_app(), host="0.0.0.0", port=8000)
+    uvicorn.run(create_app(), host="0.0.0.0", port=8000, reload=True)

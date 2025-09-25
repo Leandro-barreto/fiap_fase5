@@ -4,285 +4,407 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Predição de Contratação</title>
-    <!-- Import Google Font Inter for a clean modern look -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <style>
-      /* Basic reset and typography */
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Inter', sans-serif;
-        background-color: #f5f7fa;
-        color: #333;
-      }
-      .container {
-        max-width: 900px;
-        margin: 40px auto;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        padding: 24px 32px;
-      }
-      h1 {
-        font-size: 1.8rem;
-        margin-bottom: 16px;
-        font-weight: 600;
-        color: #1f2937;
-      }
-      h2 {
-        font-size: 1.3rem;
-        margin: 24px 0 8px;
-        font-weight: 500;
-        color: #374151;
-      }
-      label {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #4b5563;
-      }
-      input[type='text'],
-      input[type='number'],
-      select,
-      textarea {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        margin-bottom: 16px;
-        background-color: #f9fafb;
-        color: #374151;
-      }
-      textarea {
-        resize: vertical;
-        min-height: 80px;
-      }
-      button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #2563eb;
-        color: #fff;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-      }
-      button:disabled {
-        background-color: #9ca3af;
-        cursor: not-allowed;
-      }
-      button:hover:not(:disabled) {
-        background-color: #1e4bb8;
-      }
-      .spinner {
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #2563eb;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 1s linear infinite;
-        margin-left: 8px;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-      .result-box {
-        margin-top: 16px;
-        padding: 16px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        background-color: #f9fafb;
-        font-size: 0.95rem;
-        display: none;
-        white-space: pre-wrap;
-      }
-      .result-box.approved {
-        border-color: #10b981;
-        background-color: #ecfdf5;
-        color: #065f46;
-      }
-      .result-box.rejected {
-        border-color: #ef4444;
-        background-color: #fef2f2;
-        color: #991b1b;
-      }
-      .section-divider {
-        height: 1px;
-        background-color: #e5e7eb;
-        margin: 32px 0;
-      }
+      body{margin:0;padding:0;font-family:'Inter',sans-serif;background:#f5f7fa;color:#333}
+      .container{max-width:1000px;margin:40px auto;background:#fff;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.08);padding:28px 34px}
+      h1{font-size:1.8rem;margin-bottom:16px;font-weight:600;color:#1f2937}
+      h2{font-size:1.25rem;margin:22px 0 10px;font-weight:600;color:#374151}
+      .grid-1{display:grid;grid-template-columns:1fr;gap:16px}
+      label{display:block;margin-bottom:4px;font-size:.9rem;font-weight:500;color:#4b5563}
+      input[type='text'],input[type='number'],select,textarea{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:.9rem;margin-bottom:12px;background:#f9fafb;color:#374151}
+      textarea{resize:vertical;min-height:84px}
+      .row{display:flex;gap:16px}
+      .row > div{flex:1}
+      .section-divider{height:1px;background:#e5e7eb;margin:28px 0}
+      .btn{display:inline-flex;align-items:center;justify-content:center;background:#2563eb;color:#fff;padding:10px 20px;border:none;border-radius:6px;font-size:.95rem;font-weight:600;cursor:pointer;transition:background-color .2s}
+      .btn:disabled{background:#9ca3af;cursor:not-allowed}
+      .btn:hover:not(:disabled){background:#1e4bb8}
+      .spinner{border:3px solid #f3f3f3;border-top:3px solid #2563eb;border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;margin-left:8px}
+      @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+      .result-box{margin-top:16px;padding:16px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;font-size:.95rem;display:none;white-space:pre-wrap}
+      .result-box.approved{border-color:#10b981;background:#ecfdf5;color:#065f46}
+      .result-box.rejected{border-color:#ef4444;background:#fef2f2;color:#991b1b}
+      .muted{color:#6b7280;font-size:.85rem}
+      .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+      .card{border:1px solid #e5e7eb;border-radius:8px;padding:16px;background:#fafbff}
+      .hint{font-size:.8rem;color:#6b7280;margin-top:-8px;margin-bottom:12px}
+      code.small{background:#eef2ff;border-radius:4px;padding:2px 6px;font-size:.78rem}
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Predição de Contratação</h1>
-      <!-- Form for manual entry -->
+      <p class="muted">Preencha os campos abaixo para calcular a probabilidade de contratação (predição única) ou envie um CSV para predições em lote.</p>
+
       <form id="form-predict">
-        <h2>Dados da Vaga</h2>
-        <label for="job_title">Título da vaga</label>
-        <input type="text" id="job_title" placeholder="Ex.: Desenvolvedor Backend" />
-        <label for="job_description">Descrição da vaga</label>
-        <textarea id="job_description" placeholder="Descreva as responsabilidades e requisitos da vaga"></textarea>
-        <label for="tipo_contratacao">Tipo de contratação</label>
-        <select id="tipo_contratacao">
-          <option value="">Selecione...</option>
-          <option value="CLT">CLT</option>
-          <option value="PJ">PJ</option>
-          <option value="Estágio">Estágio</option>
-          <option value="Temporário">Temporário</option>
-        </select>
-        <label for="estado_vaga">Estado (UF) da vaga</label>
-        <input type="text" id="estado_vaga" placeholder="Ex.: SP" />
-        <label for="cidade_vaga">Cidade da vaga</label>
-        <input type="text" id="cidade_vaga" placeholder="Ex.: São Paulo" />
-        <label for="remuneracao">Faixa salarial (R$)</label>
-        <input type="number" id="remuneracao" placeholder="Ex.: 8000" />
+        <div class="two-col">
+          <div class="card">
+            <h2>Dados da Vaga</h2>
+            <div class="grid-1">
+              <div>
+                <label for="vaga_titulo_vaga">Título da vaga</label>
+                <input type="text" id="vaga_titulo_vaga" placeholder="Engenheiro de Dados" />
+              </div>
+              <div>
+                <label for="vaga_principais_atividades">Principais atividades</label>
+                <textarea id="vaga_principais_atividades" placeholder="Construção de pipelines ETL, orquestração (Airflow)"></textarea>
+              </div>
+              <div>
+                <label for="vaga_competencias">Competências</label>
+                <textarea id="vaga_competencias" placeholder="Python, SQL, Airflow"></textarea>
+              </div>
+              <div>
+                <label for="vaga_areas_atuacao">Áreas de atuação</label>
+                <input type="text" id="vaga_areas_atuacao" placeholder="Dados" />
+              </div>
+              <div>
+                <label for="vaga_demais_observacoes">Demais observações</label>
+                <textarea id="vaga_demais_observacoes" placeholder="Desejável experiência com cloud"></textarea>
+              </div>
+              <div>
+                <label for="vaga_descricao">Descrição</label>
+                <textarea id="vaga_descricao" placeholder=""></textarea>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="vaga_uf">Estado (UF)</label>
+                  <select id="vaga_uf">
+                    <option value="AC">AC</option>
+<option value="AL">AL</option>
+<option value="AP">AP</option>
+<option value="AM">AM</option>
+<option value="BA">BA</option>
+<option value="CE">CE</option>
+<option value="DF">DF</option>
+<option value="ES">ES</option>
+<option value="GO">GO</option>
+<option value="MA">MA</option>
+<option value="MT">MT</option>
+<option value="MS">MS</option>
+<option value="MG">MG</option>
+<option value="PA">PA</option>
+<option value="PB">PB</option>
+<option value="PR">PR</option>
+<option value="PE">PE</option>
+<option value="PI">PI</option>
+<option value="RJ">RJ</option>
+<option value="RN">RN</option>
+<option value="RS">RS</option>
+<option value="RO">RO</option>
+<option value="RR">RR</option>
+<option value="SC">SC</option>
+<option value="SP" selected>SP</option>
+<option value="SE">SE</option>
+<option value="TO">TO</option>
+<option value="Remoto">Remoto</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="vaga_cidade">Cidade</label>
+                  <input type="text" id="vaga_cidade" placeholder="São Paulo" />
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="vaga_tipo_contratacao">Tipo de contratação</label>
+                  <select id="vaga_tipo_contratacao">
+                    <option value="PJ">PJ</option>
+<option value="CLT" selected>CLT</option>
+<option value="Estágio">Estágio</option>
+<option value="Cotas">Cotas</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="vaga_nivel_profissional">Nível profissional</label>
+                  <select id="vaga_nivel_profissional">
+                    <option value="Júnior">Júnior</option>
+<option value="Pleno" selected>Pleno</option>
+<option value="Sênior">Sênior</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="vaga_nivel_ingles">Nível de inglês (vaga)</label>
+                  <select id="vaga_nivel_ingles">
+                    <option value="Nenhum">Nenhum</option>
+<option value="Básico">Básico</option>
+<option value="Intermediário" selected>Intermediário</option>
+<option value="Avançado">Avançado</option>
+<option value="Fluente">Fluente</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="vaga_nivel_espanhol">Nível de espanhol (vaga)</label>
+                  <select id="vaga_nivel_espanhol">
+                    <option value="Nenhum">Nenhum</option>
+<option value="Básico" selected>Básico</option>
+<option value="Intermediário">Intermediário</option>
+<option value="Avançado">Avançado</option>
+<option value="Fluente">Fluente</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label for="vaga_nivel_academico">Nível acadêmico</label>
+                <select id="vaga_nivel_academico">
+                  <option value="Ensino Fundamental">Ensino Fundamental</option>
+<option value="Ensino Médio Incompleto">Ensino Médio Incompleto</option>
+<option value="Ensino Médio Completo">Ensino Médio Completo</option>
+<option value="Ensino Superior Incompleto">Ensino Superior Incompleto</option>
+<option value="Ensino Superior Completo" selected>Ensino Superior Completo</option>
+<option value="Pós-Graduação Incompleto">Pós-Graduação Incompleto</option>
+<option value="Pós-Graduação Completo">Pós-Graduação Completo</option>
+<option value="Mestrado Incompleto">Mestrado Incompleto</option>
+<option value="Mestrado Completo">Mestrado Completo</option>
+<option value="Doutorado Incompleto">Doutorado Incompleto</option>
+<option value="Doutorado Completo">Doutorado Completo</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-        <div class="section-divider"></div>
+          <div class="card">
+            <h2>Dados do Candidato</h2>
+            <div class="grid-1">
+              <div>
+                <label for="cand_conhecimentos_tecnicos">Conhecimentos técnicos</label>
+                <textarea id="cand_conhecimentos_tecnicos" placeholder="Python, SQL, Airflow, ETL, modelagem de dados"></textarea>
+              </div>
+              <div>
+                <label for="cand_certificacoes">Certificações</label>
+                <input type="text" id="cand_certificacoes" placeholder="AWS Cloud Practitioner" />
+              </div>
+              <div>
+                <label for="cand_outras_certificacoes">Outras certificações</label>
+                <input type="text" id="cand_outras_certificacoes" placeholder="" />
+              </div>
+              <div>
+                <label for="cand_titulo_profissional">Título profissional</label>
+                <input type="text" id="cand_titulo_profissional" placeholder="Engenheiro de Dados" />
+              </div>
+              <div>
+                <label for="cand_area_atuacao">Área de atuação</label>
+                <input type="text" id="cand_area_atuacao" placeholder="Dados" />
+              </div>
+              <div>
+                <label for="cand_cv_text">CV (texto)</label>
+                <textarea id="cand_cv_text" placeholder=""></textarea>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="cand_uf">Estado (UF)</label>
+                  <select id="cand_uf">
+                    <option value="AC">AC</option>
+<option value="AL">AL</option>
+<option value="AP">AP</option>
+<option value="AM">AM</option>
+<option value="BA">BA</option>
+<option value="CE">CE</option>
+<option value="DF">DF</option>
+<option value="ES">ES</option>
+<option value="GO">GO</option>
+<option value="MA">MA</option>
+<option value="MT">MT</option>
+<option value="MS">MS</option>
+<option value="MG">MG</option>
+<option value="PA">PA</option>
+<option value="PB">PB</option>
+<option value="PR">PR</option>
+<option value="PE">PE</option>
+<option value="PI">PI</option>
+<option value="RJ">RJ</option>
+<option value="RN">RN</option>
+<option value="RS">RS</option>
+<option value="RO">RO</option>
+<option value="RR">RR</option>
+<option value="SC">SC</option>
+<option value="SP" selected>SP</option>
+<option value="SE">SE</option>
+<option value="TO">TO</option>
+<option value="Remoto">Remoto</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="cand_cidade">Cidade</label>
+                  <input type="text" id="cand_cidade" placeholder="São Paulo" />
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="cand_nivel_profissional">Nível profissional</label>
+                  <select id="cand_nivel_profissional">
+                    <option value="Júnior">Júnior</option>
+<option value="Pleno" selected>Pleno</option>
+<option value="Sênior">Sênior</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="cand_remuneracao">Pretensão salarial (R$)</label>
+                  <input type="number" id="cand_remuneracao" placeholder="16000" />
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="cand_nivel_academico">Nível acadêmico</label>
+                  <select id="cand_nivel_academico">
+                    <option value="Ensino Fundamental">Ensino Fundamental</option>
+<option value="Ensino Médio Incompleto">Ensino Médio Incompleto</option>
+<option value="Ensino Médio Completo">Ensino Médio Completo</option>
+<option value="Ensino Superior Incompleto">Ensino Superior Incompleto</option>
+<option value="Ensino Superior Completo" selected>Ensino Superior Completo</option>
+<option value="Pós-Graduação Incompleto">Pós-Graduação Incompleto</option>
+<option value="Pós-Graduação Completo">Pós-Graduação Completo</option>
+<option value="Mestrado Incompleto">Mestrado Incompleto</option>
+<option value="Mestrado Completo">Mestrado Completo</option>
+<option value="Doutorado Incompleto">Doutorado Incompleto</option>
+<option value="Doutorado Completo">Doutorado Completo</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="cand_nivel_ingles">Nível de inglês</label>
+                  <select id="cand_nivel_ingles">
+                    <option value="Nenhum">Nenhum</option>
+<option value="Básico">Básico</option>
+<option value="Intermediário">Intermediário</option>
+<option value="Avançado" selected>Avançado</option>
+<option value="Fluente">Fluente</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div>
+                  <label for="cand_nivel_espanhol">Nível de espanhol</label>
+                  <select id="cand_nivel_espanhol">
+                    <option value="Nenhum">Nenhum</option>
+<option value="Básico">Básico</option>
+<option value="Intermediário" selected>Intermediário</option>
+<option value="Avançado">Avançado</option>
+<option value="Fluente">Fluente</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="cand_outro_idioma">Outro idioma (opcional)</label>
+                  <input type="text" id="cand_outro_idioma" placeholder="" />
+                </div>
+              </div>
+              <div>
+                <label for="cand_tipo_contratacao">Tipo de contratação (preferência)</label>
+                <select id="cand_tipo_contratacao">
+                  <option value="PJ">PJ</option>
+<option value="CLT" selected>CLT</option>
+<option value="Estágio">Estágio</option>
+<option value="Cotas">Cotas</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <h2>Dados do Candidato</h2>
-        <label for="cand_cv">Currículo ou resumo</label>
-        <textarea id="cand_cv" placeholder="Cole o texto do currículo aqui"></textarea>
-        <label for="cand_nivel_ingles">Nível de inglês</label>
-        <select id="cand_nivel_ingles">
-          <option value="">Selecione...</option>
-          <option value="Nenhum">Nenhum</option>
-          <option value="Básico">Básico</option>
-          <option value="Intermediário">Intermediário</option>
-          <option value="Avançado">Avançado</option>
-          <option value="Fluente">Fluente</option>
-          <option value="Nativo">Nativo</option>
-        </select>
-        <label for="cand_nivel_academico">Nível acadêmico</label>
-        <select id="cand_nivel_academico">
-          <option value="">Selecione...</option>
-          <option value="Não informado">Não informado</option>
-          <option value="Ensino Médio">Ensino Médio</option>
-          <option value="Técnico">Técnico</option>
-          <option value="Bacharel">Bacharel</option>
-          <option value="Mestrado">Mestrado</option>
-          <option value="Doutorado">Doutorado</option>
-        </select>
-        <label for="cand_expectativa">Pretensão salarial (R$)</label>
-        <input type="number" id="cand_expectativa" placeholder="Ex.: 7000" />
-        <!-- Additional candidate location fields to support same_state/same_region -->
-        <label for="estado_candidato">Estado (UF) do candidato</label>
-        <input type="text" id="estado_candidato" placeholder="Ex.: SP" />
-        <label for="cidade_candidato">Cidade do candidato</label>
-        <input type="text" id="cidade_candidato" placeholder="Ex.: Campinas" />
-        <label for="recrutador">Recrutador (opcional)</label>
-        <input type="text" id="recrutador" placeholder="Nome do recrutador" />
-        <label for="analista_responsavel">Analista Responsável (opcional)</label>
-        <input type="text" id="analista_responsavel" placeholder="Nome do analista" />
-        <button id="btn-predict" type="submit">Calcular Probabilidade<span id="spinner-json" class="spinner" style="display: none;"></span></button>
+        <button id="btn-predict" class="btn" type="submit">
+          Calcular Probabilidade <span id="spinner-json" class="spinner" style="display:none;"></span>
+        </button>
       </form>
+
       <div id="result-box" class="result-box"></div>
 
       <div class="section-divider"></div>
 
-      <!-- Section for CSV upload -->
-      <h2>Ou envie um arquivo CSV com as features</h2>
-      <input type="file" id="csv-file" accept=".csv" />
-      <button id="btn-upload" type="button">Enviar CSV<span id="spinner-csv" class="spinner" style="display: none;"></span></button>
+      <h2>Predições em lote (CSV)</h2>
+      <p class="muted">Envie um CSV com colunas RAW prefixadas <code class="small">cand_*</code> e <code class="small">vaga_*</code>.</p>
+      <div class="row">
+        <input type="file" id="csv-file" accept=".csv" />
+        <button id="btn-upload" class="btn" type="button">Enviar CSV <span id="spinner-csv" class="spinner" style="display:none;"></span></button>
+      </div>
       <div id="csv-result-box" class="result-box"></div>
     </div>
 
     <script>
-      // Helper to update the result display
       function showResult(text, approved, targetId) {
         const box = document.getElementById(targetId);
         box.style.display = 'block';
         box.textContent = text;
         box.classList.remove('approved', 'rejected');
-        if (approved === true) {
-          box.classList.add('approved');
-        } else if (approved === false) {
-          box.classList.add('rejected');
-        }
+        if (approved === true) box.classList.add('approved');
+        else if (approved === false) box.classList.add('rejected');
       }
 
-      // Submit handler for JSON form
       document.getElementById('form-predict').addEventListener('submit', function (e) {
         e.preventDefault();
         const btn = document.getElementById('btn-predict');
         const spinner = document.getElementById('spinner-json');
-        btn.disabled = true;
-        spinner.style.display = 'inline-block';
-        // Gather form values
-        const data = {
-          job_title: document.getElementById('job_title').value,
-          job_description: document.getElementById('job_description').value,
-          tipo_contratacao: document.getElementById('tipo_contratacao').value,
-          estado_vaga: document.getElementById('estado_vaga').value,
-          cidade_vaga: document.getElementById('cidade_vaga').value,
-          remuneracao: document.getElementById('remuneracao').value,
-          cv: document.getElementById('cand_cv').value,
-          nivel_ingles: document.getElementById('cand_nivel_ingles').value,
+        btn.disabled = true; spinner.style.display = 'inline-block';
+
+        const cand = {
+          conhecimentos_tecnicos: document.getElementById('cand_conhecimentos_tecnicos').value,
+          certificacoes: document.getElementById('cand_certificacoes').value,
+          outras_certificacoes: document.getElementById('cand_outras_certificacoes').value,
+          titulo_profissional: document.getElementById('cand_titulo_profissional').value,
+          area_atuacao: document.getElementById('cand_area_atuacao').value,
+          cv_text: document.getElementById('cand_cv_text').value,
+          uf: document.getElementById('cand_uf').value,
+          cidade: document.getElementById('cand_cidade').value,
+          nivel_profissional: document.getElementById('cand_nivel_profissional').value,
+          remuneracao: document.getElementById('cand_remuneracao').value,
           nivel_academico: document.getElementById('cand_nivel_academico').value,
-          expectativa_salario: document.getElementById('cand_expectativa').value,
-          estado_candidato: document.getElementById('estado_candidato').value,
-          cidade_candidato: document.getElementById('cidade_candidato').value,
-          recrutador: document.getElementById('recrutador').value,
-          analista_responsavel: document.getElementById('analista_responsavel').value,
+          nivel_ingles: document.getElementById('cand_nivel_ingles').value,
+          nivel_espanhol: document.getElementById('cand_nivel_espanhol').value,
+          outro_idioma: document.getElementById('cand_outro_idioma').value,
+          tipo_contratacao: document.getElementById('cand_tipo_contratacao').value
         };
-        fetch('/api/predict/candidate', {
+
+        const vaga = {
+          titulo_vaga: document.getElementById('vaga_titulo_vaga').value,
+          principais_atividades: document.getElementById('vaga_principais_atividades').value,
+          competencias: document.getElementById('vaga_competencias').value,
+          areas_atuacao: document.getElementById('vaga_areas_atuacao').value,
+          demais_observacoes: document.getElementById('vaga_demais_observacoes').value,
+          descricao: document.getElementById('vaga_descricao').value,
+          uf: document.getElementById('vaga_uf').value,
+          cidade: document.getElementById('vaga_cidade').value,
+          tipo_contratacao: document.getElementById('vaga_tipo_contratacao').value,
+          nivel_profissional: document.getElementById('vaga_nivel_profissional').value,
+          nivel_ingles: document.getElementById('vaga_nivel_ingles').value,
+          nivel_espanhol: document.getElementById('vaga_nivel_espanhol').value,
+          nivel_academico: document.getElementById('vaga_nivel_academico').value
+        };
+
+        fetch('/predict/single', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+          body: JSON.stringify({ cand, vaga, top_k: 10 }),
         })
-          .then((res) => res.json())
-          .then((resp) => {
-            spinner.style.display = 'none';
-            btn.disabled = false;
-            if ('error' in resp || resp.detail) {
-              showResult('Erro: ' + (resp.detail || resp.error), null, 'result-box');
-              return;
+        .then(r => r.json())
+        .then(resp => {
+          spinner.style.display = 'none'; btn.disabled = false;
+          if (resp.detail) { showResult('Erro: ' + resp.detail, null, 'result-box'); return; }
+          const prob = resp.probability ?? 0;
+          const label = resp.label ?? 0;
+          const pct = (prob * 100).toFixed(2) + '%';
+          let resultText = label === 1
+            ? 'Aprovado com probabilidade de ' + pct
+            : 'Não aprovado (probabilidade de aprovação: ' + pct + ')';
+          if (Array.isArray(resp.top_local_contributions)) {
+            const tops = resp.top_local_contributions.slice(0, 5).map(t => t.feature_original).join(', ');
+            resultText += '\nPrincipais fatores (locais): ' + tops;
+          }
+          if (resp.features_engineered) {
+            resultText += '\n\nValores das features usadas:\n';
+            for (const [k, v] of Object.entries(resp.features_engineered)) {
+              resultText += `${k}: ${v}\n`;
             }
-            const prob = resp.probability !== undefined ? resp.probability : 0;
-            const pred = resp.prediction !== undefined ? resp.prediction : 0;
-            const approved = pred === 1;
-            const pct = (prob * 100).toFixed(2) + '%';
-            let resultText = approved
-              ? 'Aprovado com probabilidade de ' + pct
-              : 'Não aprovado (probabilidade de aprovação: ' + pct + ')';
-            // Append top features if available
-            if (Array.isArray(resp.top_features)) {
-              resultText += '\nPrincipais features: ' + resp.top_features.join(', ');
-            }
-            // Append feature values if available
-            if (resp.features) {
-              let featLines = '';
-              for (const [k, v] of Object.entries(resp.features)) {
-                featLines += `${k}: ${v}\n`;
-              }
-              resultText += '\n\nFeatures utilizados:\n' + featLines.trim();
-            }
-            showResult(resultText, approved, 'result-box');
-          })
-          .catch((err) => {
-            spinner.style.display = 'none';
-            btn.disabled = false;
-            showResult('Erro ao enviar requisição: ' + err, null, 'result-box');
-          });
+          }
+          showResult(resultText, label === 1, 'result-box');
+        })
+        .catch(err => {
+          spinner.style.display = 'none'; btn.disabled = false;
+          showResult('Erro ao enviar requisição: ' + err, null, 'result-box');
+        });
       });
 
-      // Upload handler for CSV
       document.getElementById('btn-upload').addEventListener('click', function () {
         const btn = this;
         const spinner = document.getElementById('spinner-csv');
@@ -293,49 +415,33 @@
         }
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        btn.disabled = true;
-        spinner.style.display = 'inline-block';
-        fetch('/api/predict/candidate', {
-          method: 'POST',
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((resp) => {
-            spinner.style.display = 'none';
-            btn.disabled = false;
-            if ('error' in resp || resp.detail) {
-              showResult('Erro: ' + (resp.detail || resp.error), null, 'csv-result-box');
-              return;
-            }
-            const preds = resp.predictions || [];
-            const probs = resp.probabilities || [];
-            const feats = resp.features || [];
-            const top_feats = resp.top_features || [];
+        formData.append('include_engineered', 'true');
+        btn.disabled = true; spinner.style.display = 'inline-block';
+
+        fetch('/predict/batch', { method: 'POST', body: formData })
+          .then(r => r.json())
+          .then(resp => {
+            spinner.style.display = 'none'; btn.disabled = false;
+            if (resp.detail) { showResult('Erro: ' + resp.detail, null, 'csv-result-box'); return; }
+            const rows = resp.rows || [];
             let lines = '';
-            for (let i = 0; i < preds.length; i++) {
-              const approved = preds[i] === 1;
-              const pct = (probs[i] * 100).toFixed(2) + '%';
-              const txt = approved
-                ? 'Registro ' + (i + 1) + ': Aprovado (' + pct + ')'
-                : 'Registro ' + (i + 1) + ': Não aprovado (' + pct + ')';
+            rows.forEach((row, i) => {
+              const pct = ((row.probability ?? 0) * 100).toFixed(2) + '%';
+              const txt = (row.label === 1)
+                ? `Registro ${i+1}: Aprovado (${pct})`
+                : `Registro ${i+1}: Não aprovado (${pct})`;
               lines += txt + '\n';
-              // append top features for this row if available
-              if (top_feats[i] && Array.isArray(top_feats[i])) {
-                lines += 'Principais features: ' + top_feats[i].join(', ') + '\n';
+              if (Array.isArray(row.top_features)) lines += 'Principais features: ' + row.top_features.join(', ') + '\n';
+              if (row.engineered) {
+                lines += 'Features:\n';
+                for (const [k, v] of Object.entries(row.engineered)) lines += `${k}: ${v}\n`;
               }
-              if (feats[i]) {
-                let featStr = '';
-                for (const [k, v] of Object.entries(feats[i])) {
-                  featStr += `${k}: ${v}\n`;
-                }
-                lines += 'Features:\n' + featStr + '\n';
-              }
-            }
+              lines += '\n';
+            });
             showResult(lines.trim(), null, 'csv-result-box');
           })
-          .catch((err) => {
-            spinner.style.display = 'none';
-            btn.disabled = false;
+          .catch(err => {
+            spinner.style.display = 'none'; btn.disabled = false;
             showResult('Erro ao enviar requisição: ' + err, null, 'csv-result-box');
           });
       });

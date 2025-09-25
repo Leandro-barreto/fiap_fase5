@@ -1,40 +1,27 @@
-"""Training script for the hiring prediction model.
+"""Pipeline de treinamento.
 
-This module defines a command‑line interface to train a binary
-classification model that predicts whether a candidate will be
-contracted.  It uses the data preparation and feature engineering
-functions from ``src/data/prepare_data`` and ``src/data/feature_engineering``
-and trains a logistic regression model within a scikit‑learn ``Pipeline``.
-The pipeline consists of preprocessing (scaling numeric features and
-one‑hot encoding categorical features) followed by classification.  The
-default model is ``LogisticRegression`` but can be swapped as needed.
+Este script treina um modelo LightGBM sobre um conjunto de dados tabular com variáveis
+numéricas e categóricas. Ele imprime métricas de avaliação completas e gera gráficos
+básicos como a curva ROC e a matriz de confusão. As métricas calculadas incluem
+acurácia, precisão, recall, F1‑score e a área sob a curva ROC (AUC). A curva ROC e a
+matriz de confusão são salvas como arquivos PNG no diretório de saída.
 
-The implementation is based on the earlier ``training_pipeline.py`` which
-computes features and trains a model.  It also integrates optional
-SHAP explanations when the ``shap`` package is available.
+Para usar este script:
+
+```
+python train.py --input-csv caminho/para/dados_com_target.csv --output-dir saida/
+```
+
+Um arquivo `trained_model.joblib` será salvo no diretório de saída, bem como `metrics.json`,
+`roc_curve.png` e `confusion_matrix.png`.
 """
 
-from __future__ import annotations
-
 import argparse
+import json
 from pathlib import Path
-from typing import Optional
 
-import joblib
-# Use LightGBM for classification instead of LogisticRegression
-try:
-    from lightgbm import LGBMClassifier  # type: ignore
-except ImportError:
-    LGBMClassifier = None  # fallback will be handled during model creation
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split
-from imblearn.over_sampling import RandomOverSampler
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-
-from src.data import feature_engineering as fe
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from lightgbm import LGBMClassifier
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import (
@@ -49,62 +36,15 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 
 import matplotlib
-matplotlib.use("Agg")  # assegura que o script funcione em ambientes sem display
+
+# Use backend Agg for environments without display
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-
-def aggregate_shap(
-    shap_values: np.ndarray,
-    feature_names: np.ndarray,
-    num_cols: list[str],
-    cat_cols: list[str],
-) -> pd.DataFrame:
-    """Agrupa as contribuições SHAP pré‑processadas de volta para cada coluna original.
-
-    O LightGBM retorna uma matriz de contribuições com `n_features_pre + 1`
-    colunas (a última coluna corresponde ao termo de base).  As colunas
-    numéricas são prefixadas com `num__` e as categorias são codificadas como
-    `cat__{col}_categoria`.  Esta função descarta o termo de base, soma as
-    contribuições das categorias de cada coluna categórica e retorna um
-    DataFrame com uma coluna por feature original.
-    """
-    # descartar o termo de base (última coluna)
-    shap_vals = shap_values[:, :-1]
-    shap_df = pd.DataFrame(shap_vals, columns=feature_names)
-    agg = pd.DataFrame()
-    # features numéricas: copiar diretamente (os nomes no transformer vêm
-    # prefixados com "num__")
-    for col in num_cols:
-        feat_name = f"num__{col}"
-        agg[col] = shap_df.get(feat_name, 0.0)
-    # features categóricas: somar todas as categorias de cada coluna
-    for col in cat_cols:
-        prefix = f"cat__{col}_"
-        cols = [c for c in shap_df.columns if c.startswith(prefix)]
-        if cols:
-            agg[col] = shap_df[cols].sum(axis=1)
-        else:
-            agg[col] = 0.0
-    return agg
-
-
-def plot_violin(shap_df: pd.DataFrame, title: str, output_path: Path) -> None:
-    """Gera e salva um gráfico violin das contribuições SHAP.
-
-    O DataFrame de contribuições é transformado para formato long para que
-    `seaborn.violinplot` possa desenhar um violino horizontal para cada
-    feature.  A figura é salva em `output_path`.
-    """
-    data_long = shap_df.melt(var_name="feature", value_name="contribution")
-    plt.figure(figsize=(10, 6))
-    sns.violinplot(data=data_long, x="contribution", y="feature", orient="h", cut=0)
-    plt.title(title)
-    plt.tight_layout()
-    plt.savefig(output_path)
-    plt.close()
 
 
 def plot_confusion_matrix(cm: np.ndarray, classes: list[str], output_path: Path) -> None:
@@ -164,204 +104,109 @@ def plot_roc_curve(y_true: np.ndarray, y_score: np.ndarray, output_path: Path) -
     return float(auc_val)
 
 
-def train_model(
-    data_dir: Path,
-    model_output: Optional[Path] = None,
-    test_size: float = 0.2,
-    random_state: int = 42,
-) -> None:
-    """Train and evaluate the hiring prediction model.
+def train_model(df: pd.DataFrame, output_dir: Path) -> None:
+    # Ler dados
+    if "label_contratado" not in df.columns:
+        raise ValueError("Arquivo de entrada deve conter uma coluna 'target'")
+    
+    RANDOM_STATE = 42
+    TEST_SIZE = 0.2
+    N_SPLITS = 3  # folds do GridSearchCV
+    ENGINEERED = [
+        "cand_cidade","cand_uf","cand_regiao","vaga_uf","vaga_cidade_unif","vaga_regiao",
+        "same_state","same_city","same_region",
+        "meets_academic","meets_english","meets_spanish",
+        "sim_tfidf","overlap_kw","jaccard_kw",
+        "cand_remuneracao_num",
+        "vaga_is_CLT","vaga_is_PJ","vaga_is_Estagiario","vaga_is_Cotas",
+        "cand_is_Junior","cand_is_Pleno","cand_is_Senior",
+        "vaga_is_Junior","vaga_is_Pleno","vaga_is_Senior",
+    ]
+    TARGET = "label_contratado"
 
-    Parameters
-    ----------
-    data_dir : Path
-        Directory containing ``applicants.json``, ``prospects.json`` and
-        ``vagas.json``.
-    model_output : Path, optional
-        If provided, save the trained pipeline to this path using ``joblib``.
-    test_size : float, optional
-        Proportion of the dataset reserved for testing (default 0.2).
-    random_state : int, optional
-        Random seed for the train/test split (default 42).
-    """
-    print("Carregando e preparando dados...")
-    # Load and prepare data
-    X, y, meta = fe.load_features(data_dir)
-    X_features = fe.split_features(X, meta)
+    CATEGORICAL = ["cand_cidade","cand_uf","cand_regiao","vaga_uf","vaga_cidade_unif","vaga_regiao"]
+    NUMERIC = [c for c in ENGINEERED if c not in CATEGORICAL]
 
-    # ---------------------------------------------------------------------
-    # Handle missing values
-    #
-    # Rather than dropping all rows with missing values (which led to a huge
-    # reduction of the dataset), we fill in NaNs according to domain rules
-    # provided by the user:
-    #  - nivel_ingles        : missing -> "Nenhum"
-    #  - nivel_academico     : missing -> "Não informado"
-    #  - remuneracao_num     : missing -> -1 (keep as numeric)
-    #  - other numeric cols  : missing -> -1
-    #  - other text cols     : missing -> "N/A"
-    # After imputing, we update the metadata to ensure remuneracao_num is
-    # treated as a categorical feature if it is no longer numeric.
-    X_features = X_features.copy()
-    # Fill domain‑specific categorical values
-    if "nivel_ingles" in X_features.columns:
-        X_features["nivel_ingles"] = X_features["nivel_ingles"].fillna("Nenhum")
-    if "nivel_academico" in X_features.columns:
-        X_features["nivel_academico"] = X_features["nivel_academico"].fillna(
-            "Não informado"
-        )
-    if "remuneracao_num" in X_features.columns:
-        # keep remuneracao_num numeric and fill missing values with -1 to avoid
-        # mixed type errors in encoders
-        X_features["remuneracao_num"] = X_features["remuneracao_num"].fillna(-1)
-    # Fill remaining NaNs
-    for col in X_features.columns:
-        if X_features[col].isna().any():
-            # Skip columns already handled above
-            if col in {"nivel_ingles", "nivel_academico", "remuneracao_num"}:
-                continue
-            if pd.api.types.is_numeric_dtype(X_features[col]):
-                X_features[col] = X_features[col].fillna(-1)
-            else:
-                X_features[col] = X_features[col].fillna("N/A")
-    # Report counts of filled values
-    orig_len = len(X_features)
-    # Count how many rows still contain NaNs after filling (should be zero)
-    remaining_nans = X_features.isna().any(axis=1).sum()
-    print(f"Tamanho do conjunto de treinamento: {orig_len}")
-    print(f"Cols: {X_features.columns}")
-    print(f"Registros com NaN restantes após imputação: {remaining_nans}")
+    missing = [c for c in ENGINEERED + [TARGET] if c not in df.columns]
+    if missing:
+        raise ValueError(f"Colunas ausentes no CSV: {missing}")
 
-    print("Dividindo em conjuntos de treino e teste...")
-    # Split into train/test
+    df = df[~df.label_contratado.isna()].reset_index(drop=True)
+    X = df[ENGINEERED].copy()
+    y = df[TARGET].astype(int).copy()
+
+    print("Formato X:", X.shape, "| Formato y:", y.shape)
+    print("Distribuição de y:")
+    print(y.value_counts(dropna=False))
+
+    # Dividir em treino e teste
     X_train, X_test, y_train, y_test = train_test_split(
-        X_features,
-        y,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=y,
+        X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
     )
+    n_pos = (y_train == 1).sum()
+    n_neg = (y_train == 0).sum()
+    pos_weight = n_neg / max(n_pos, 1)
 
-    print("Realizando oversampling...")
-    # Optional oversampling of the minority class (hired candidates).
-    #
-    # In production we use ``RandomOverSampler`` to balance the dataset by
-    # duplicating minority samples.  However, for very small datasets (such as
-    # those used in unit tests) ``RandomOverSampler`` may raise a
-    # ``ValueError`` because the requested ratio cannot be achieved.  To make
-    # the training function robust in these scenarios we catch such errors
-    # and fall back to the unbalanced training set.  The oversampling is
-    # therefore best‑effort: if it fails the model is trained on the original
-    # data without oversampling.
-    try:
-        ros = RandomOverSampler(sampling_strategy=0.2, random_state=random_state)
-        X_train_bal, y_train_bal = ros.fit_resample(X_train, y_train)
-        # Show class distribution before and after oversampling for logging
-        print("Distribuição de classes (antes do oversampling):")
-        print(y_train.value_counts())
-        print("Distribuição de classes (após oversampling):")
-        print(y_train_bal.value_counts())
-    except ValueError:
-        # Fall back to original training data on sampling errors
-        X_train_bal, y_train_bal = X_train, y_train
-        print("Oversampling falhou para o conjunto atual; prosseguindo sem balanceamento.")
+    # Pré-processador: padronização para numéricas e one-hot para categóricas
+    preproc_lr = ColumnTransformer(transformers=[
+        ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL),
+        ("num", Pipeline(steps=[
+            ("imp", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler(with_mean=False))
+        ]), NUMERIC),
+    ], remainder="drop", sparse_threshold=0.3)
 
-    print("Construindo pipeline de pré‑processamento e modelo...")
-    # Preprocessing
-    # Build the preprocessing pipeline directly rather than delegating to
-    # ``fe.get_preprocessor``.  During testing, ``fe.get_preprocessor`` is
-    # monkeypatched to a lambda that calls itself, leading to infinite
-    # recursion.  To avoid that situation we reconstruct the numeric and
-    # categorical preprocessing pipelines here using the metadata.  Numeric
-    # columns are standardised with ``StandardScaler`` and categorical
-    # columns are one‑hot encoded with ``OneHotEncoder`` (ignoring unknown
-    # categories).  This logic mirrors the implementation in
-    # ``src/data/feature_engineering.get_preprocessor``.
-    num_cols = meta.get("num_cols", [])
-    cat_cols = meta.get("cat_cols", [])
-    from sklearn.preprocessing import StandardScaler, OneHotEncoder  # imported here to avoid heavy import at top level
-    from sklearn.compose import ColumnTransformer
-    from sklearn.pipeline import Pipeline as SKPipeline
-    numeric_transformer = SKPipeline(steps=[("scaler", StandardScaler())])
-    categorical_transformer = SKPipeline(
-        steps=[("encoder", OneHotEncoder(handle_unknown="ignore"))]
+    preproc_tree = ColumnTransformer(transformers=[
+        ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL),
+        ("num", SimpleImputer(strategy="median"), NUMERIC),
+    ], remainder="drop", sparse_threshold=0.3)
+
+    cv = StratifiedKFold(n_splits=N_SPLITS, shuffle=True, random_state=RANDOM_STATE)
+
+    lgbm = LGBMClassifier(
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+        metric="auc",
+        scale_pos_weight=pos_weight
     )
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numeric_transformer, num_cols),
-            ("cat", categorical_transformer, cat_cols),
-        ],
-        remainder="drop",
+    pipe_lgbm = Pipeline(steps=[("pre", preproc_tree), ("clf", lgbm)])
+
+    param_grid_lgbm = {
+        "clf__n_estimators":[300, 600],
+        "clf__learning_rate":[0.05, 0.1],
+        "clf__num_leaves":[31, 63],
+    }
+
+    gs_lgbm = GridSearchCV(
+        estimator=pipe_lgbm,
+        param_grid=param_grid_lgbm,
+        cv=cv,
+        scoring="roc_auc",
+        n_jobs=-1,
+        verbose=1
     )
+    gs_lgbm.fit(X_train, y_train)
+    print("Melhor params LGBM:", gs_lgbm.best_params_)
+    print("Melhor CV AUC (LGBM):", gs_lgbm.best_score_)
 
-    # Model
-    # Prefer LightGBM if available; fall back to LogisticRegression otherwise
-    if LGBMClassifier is not None:
-        print('LGBM------')
-        clf = LGBMClassifier(
-            class_weight="balanced",
-            n_estimators=200,
-            learning_rate=0.1,
-            num_leaves=31,
-            random_state=random_state,
-        )
-    else:
-        from sklearn.linear_model import LogisticRegression
-
-        clf = LogisticRegression(max_iter=1000, n_jobs=-1, class_weight="balanced")
-
-    # Build pipeline
-    model = Pipeline(steps=[("preprocessor", preprocessor), ("classifier", clf)])
-
-    # ---------------------------------------------------------------------
-    # Additional targeted oversampling of high‑similarity positive examples
-    #
-    # To further boost examples where candidate skills strongly match the job
-    # requirements, we replicate positive samples whose text similarity
-    # features exceed heuristically chosen thresholds.  This selective
-    # duplication increases their influence during model fitting without
-    # affecting negative or low‑similarity cases.  If the similarity
-    # columns are missing for some reason, this step is skipped.
-    if {
-        "sim_tfidf",
-        "overlap_kw",
-    }.issubset(X_train_bal.columns):
-        sim_threshold = 0.75
-        overlap_threshold = 0.5
-        high_sim_mask = (
-            (X_train_bal["sim_tfidf"] >= sim_threshold)
-            & (X_train_bal["overlap_kw"] >= overlap_threshold)
-            & (y_train_bal == 1)
-        )
-        if high_sim_mask.any():
-            X_dup = X_train_bal.loc[high_sim_mask]
-            y_dup = y_train_bal.loc[high_sim_mask]
-            # Append duplicated rows once.  Adjust duplication factor here
-            X_train_bal = pd.concat([X_train_bal, X_dup], ignore_index=True)
-            y_train_bal = pd.concat([y_train_bal, y_dup], ignore_index=True)
-
-    print("Treinando modelo...")
-    # Treinar
-    model.fit(X_train_bal, y_train_bal)
+    best_lgbm = gs_lgbm.best_estimator_
 
     # Previsões
-    print("COLUMNS:")
-    print(X_test.columns)
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
-
-    
+    y_pred = best_lgbm.predict(X_test)
+    y_proba = best_lgbm.predict_proba(X_test)[:, 1]
 
     # Métricas
     acc = accuracy_score(y_test, y_pred)
     prec = precision_score(y_test, y_pred, zero_division=0)
     rec = recall_score(y_test, y_pred, zero_division=0)
     f1 = f1_score(y_test, y_pred, zero_division=0)
+
     # AUC e curva ROC
-    auc_val = plot_roc_curve(y_test.values, y_proba, "models/assets/roc_curve.png")
+    auc_val = plot_roc_curve(y_test.values, y_proba, output_dir / "assets/roc_curve.png")
+
     # Matriz de confusão
     cm = confusion_matrix(y_test, y_pred)
-    plot_confusion_matrix(cm, classes=["0", "1"], output_path="models/assets/confusion_matrix.png")
+    plot_confusion_matrix(cm, classes=["0", "1"], output_path=output_dir / "assets/confusion_matrix.png")
 
     # Impressão das métricas
     print("Métricas de teste:")
@@ -373,90 +218,47 @@ def train_model(
     print("  Matriz de confusão:")
     print(cm)
 
-    # -----------------------------------------------------------------
-    # SHAP integration
-    #
-    # Compute SHAP values on a subset of the training data and persist
-    # the explainer for later use during inference.  If the ``shap``
-    # library is not installed, this step is skipped gracefully.
-    print("Gerando explicações SHAP (se possível)...")
-    try:
-        import shap  # type: ignore
+    # Preparar diretório de saída
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Use a small subset of the training data for efficiency
-        sample_size = min(200, len(X_train_bal))
-        X_sample = X_train_bal.iloc[:sample_size]
-        # Preprocess the sample for tree explainers if using LightGBM.  When the
-        # classifier is a LightGBM model, ``shap.TreeExplainer`` expects
-        # raw numeric features.  We therefore transform the sample using
-        # the fitted preprocessor.  For other estimators we fall back
-        # to the generic Explainer on the pipeline.
-        try:
-            if LGBMClassifier is not None and isinstance(clf, LGBMClassifier):
-                # Preprocess features and use TreeExplainer on the classifier
-                X_shap = preprocessor.transform(X_sample)
-                explainer = shap.TreeExplainer(clf)
-                shap_values = explainer.shap_values(X_shap)
-            else:
-                # Generic case: use shap.Explainer on the entire pipeline
-                explainer = shap.Explainer(model, X_sample)
-                shap_values = explainer(X_sample)
-            # Determine directory to persist artifacts
-            model_dir = Path("models")
-            model_dir.mkdir(exist_ok=True)
-            shap_path = model_dir / "shap_explainer.joblib"
-            joblib.dump(explainer, shap_path)
-            shap_vals_path = model_dir / "shap_values_sample.joblib"
-            joblib.dump({"X_sample": X_sample, "shap_values": shap_values}, shap_vals_path)
-            print(f"Explainer SHAP salvo em {shap_path}")
-        except Exception as shap_exc:
-            # If any error occurs during SHAP computation, warn and skip
-            print(f"Falha ao gerar ou salvar o explicador SHAP: {shap_exc}")
-    except ImportError:
-        print("Biblioteca 'shap' não instalada; pulando geração de explicador SHAP.")
+    # Salvar modelo
+    import joblib
 
-    # Save model if requested
-    if model_output is not None:
-        model_output.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(model, model_output)
-        print(f"Modelo salvo em {model_output}")
+    joblib.dump(best_lgbm, output_dir / "model_lgbm.joblib")
+
+    # Salvar métricas em JSON
+    metrics = {
+        "accuracy": float(acc),
+        "precision": float(prec),
+        "recall": float(rec),
+        "f1": float(f1),
+        "auc": None if np.isnan(auc_val) else float(auc_val),
+        "confusion_matrix": cm.tolist(),
+    }
+    with open(output_dir / "assets/metrics.json", "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+
+    print(f"Modelo e artefatos salvos em {output_dir}")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Treina modelo de predição de contratação")
+    parser = argparse.ArgumentParser(description="Treinar modelo com métricas e gráficos básicos")
     parser.add_argument(
-        "--data-dir",
-        type=str,
+        "--input-csv",
+        type=Path,
         required=True,
-        help="Diretório contendo applicants.json, prospects.json e vagas.json",
+        help="Caminho para o arquivo CSV de treinamento (com coluna 'target')",
     )
     parser.add_argument(
-        "--model-output",
-        type=str,
-        default=None,
-        help="Caminho para salvar o modelo treinado (opcional)",
-    )
-    parser.add_argument(
-        "--test-size",
-        type=float,
-        default=0.2,
-        help="Proporção reservada para o conjunto de teste",
-    )
-    parser.add_argument(
-        "--random-state",
-        type=int,
-        default=42,
-        help="Semente aleatória para divisão de dados",
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="Diretório de saída para modelo, métricas e gráficos",
     )
     args = parser.parse_args()
-    model_output = Path(args.model_output) if args.model_output else None
-    train_model(
-        Path(args.data_dir),
-        model_output=model_output,
-        test_size=args.test_size,
-        random_state=args.random_state,
-    )
+    df = pd.read_csv(args.input_csv)
+    train_model(df, args.output_dir)
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()

@@ -1,130 +1,111 @@
-"""Command‑line entry point for training and inference.
-
-This script provides a simple interface to train the hiring prediction
-model or perform batch inference using a trained pipeline.  It wraps
-functions from :mod:`src.models.train` and :mod:`src.models.infer` into
-a command‑line application.  Users can invoke training, inference, or
-both by supplying the corresponding flags.
-
-Example
--------
-
-Train a model using data in ``./data/raw`` and save it to ``./models/model.joblib``::
-
-    python main.py --train --data-dir data/raw --model-output models/model.joblib
-
-Perform inference on a CSV file of features using a saved model::
-
-    python main.py --infer --model-output models/model.joblib --input-csv samples.csv
-
-If both ``--train`` and ``--infer`` are provided, the script will first
-train the model and then perform inference.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
+main.py
+=======
+Pipeline simplificado: prepare_data -> feature_engineering -> train -> (opcional) inferência.
 
+Uso rápido:
+- Treino completo:   python main.py --mode train
+- Apenas predição:   python main.py --mode predict --inference-input data/external/synthetic_inference_data.csv
+- Pipeline completo: python main.py --mode all
+"""
 from __future__ import annotations
 
 import argparse
+import json
+import sys
 from pathlib import Path
-from typing import Optional
-
+from typing import Tuple
 import pandas as pd
 
-from src.models.train import train_model
-from src.models.infer import load_pipeline, predict, predict_proba, run_inference
+from src.data.prepare_data import load_json, flatten_applicants, flatten_prospects, flatten_vagas 
+from src.data.feature_engineering import build_df_final
+from src.models.train import train_model 
+import src.models.infer as infer_mod  # type: ignore
+
+def run_prepare_data(project_dir: Path) -> Tuple[Path, Path, Path]:
+    raw_dir = project_dir / "data" / "raw"
+    proc_dir = project_dir / "data" / "processed"
+    proc_dir.mkdir(parents=True, exist_ok=True)
+
+    app_json = raw_dir / "applicants.json"
+    pro_json = raw_dir / "prospects.json"
+    vag_json = raw_dir / "vagas.json"
 
 
-def run_training(data_dir: Path, model_output: Optional[Path]) -> None:
-    """Execute the training pipeline.
+    app_raw = load_json(app_json)
+    pro_raw = load_json(pro_json)
+    vag_raw = load_json(vag_json)
 
-    Parameters
-    ----------
-    data_dir : Path
-        Directory containing the raw JSON files used for training.
-    model_output : Optional[Path]
-        Path to persist the trained model.  If ``None``, the model is
-        trained but not saved to disk.
-    """
-    train_model(data_dir, model_output=model_output)
+    df_app = flatten_applicants(app_raw) 
+    df_pro = flatten_prospects(pro_raw)
+    df_vag = flatten_vagas(vag_raw)
 
+    print(df_app.shape, df_pro.shape, df_vag.shape)
 
-def run_inference_main(model_path: Path, input_csv: Path) -> None:
-    """Run batch inference on a CSV of feature rows.
+    app_flat = proc_dir / "applicants_flat.json"
+    pro_flat = proc_dir / "prospects_flat.json"
+    vag_flat = proc_dir / "vagas_flat.json"
 
-    Parameters
-    ----------
-    model_path : Path
-        Path to the saved model pipeline (``joblib`` file).
-    input_csv : Path
-        CSV file containing feature rows.  The column names must match
-        those expected by the training pipeline (excluding identifier
-        columns).
-    """
-    # Load the model pipeline
-    model = load_pipeline(model_path)
-    # Read features from CSV
-    X = pd.read_csv(input_csv)
-    # Predict labels and probabilities
-    preds = predict(model, X)
-    probs = predict_proba(model, X)
-    # Output results to stdout
-    for i, (label, prob) in enumerate(zip(preds, probs)):
-        print(f"Row {i}: prediction={int(label)}, probability={prob:.4f}")
-    run_inference(model_path, input_csv)
+    # salvar em JSON (orient=records), como você mencionou
+    if not df_app.empty: df_app.to_json(app_flat)
+    if not df_pro.empty: df_pro.to_json(pro_flat)
+    if not df_vag.empty: df_vag.to_json(vag_flat)
 
+    print(f"[OK] Flats salvos em: {proc_dir}")
+    return app_flat, pro_flat, vag_flat
 
+def run_feature_engineering(project_dir: Path, app_json: Path, pro_json: Path, vag_json: Path) -> Path:
+    df_final = build_df_final(app_json, pro_json, vag_json)
+    out_csv = project_dir / "data" / "processed" / "df_final.csv"
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    df_final.to_csv(out_csv, index=False, encoding="utf-8")
+    print(f"[OK] df_final salvo em: {out_csv} (linhas={len(df_final)})")
+    return df_final, out_csv
 
-def parse_args() -> argparse.Namespace:
-    """Parse command‑line arguments."""
-    parser = argparse.ArgumentParser(description="Train and/or run inference with the hiring model")
-    parser.add_argument(
-        "--train",
-        action="store_true",
-        help="Run model training.",
-    )
-    parser.add_argument(
-        "--infer",
-        action="store_true",
-        help="Run inference on a CSV of features.  Requires --model-output and --input-csv.",
-    )
-    parser.add_argument(
-        "--data-dir",
-        type=str,
-        default="data/raw",
-        help="Directory containing applicants.json, prospects.json and vagas.json for training.",
-    )
-    parser.add_argument(
-        "--model-output",
-        type=str,
-        default="models/lgbm_model2.joblib",
-        help="Path to save or load the trained model.",
-    )
-    parser.add_argument(
-        "--input-csv",
-        type=str,
-        default=None,
-        help="CSV file with feature rows for inference.",
-    )
-    return parser.parse_args()
+def run_predict(project_dir: Path, model_path: Path, input_csv: Path, output_csv: Path) -> Path:
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    infer_mod.predict_batch_from_csv(input_csv, model_path, output_csv, include_local=True, top_k=5)
+    print(f"[OK] Predições salvas em: {output_csv}")
+    return output_csv
 
+def main():
+    parser = argparse.ArgumentParser(description="Pipeline simples: prepare_data -> feature_engineering -> train -> infer")
+    parser.add_argument("--project-dir", type=Path, default=Path.cwd(), help="Raiz do projeto")
+    parser.add_argument("--mode", type=str, choices=["train", "predict", "all"], default="all",
+                        help="Modo: train (prepara+FE+treino), predict (inferência), all (tudo).")
+    parser.add_argument("--inference-input", type=Path, default=None,
+                        help="CSV de entrada para inferência (default: data/external/synthetic_inference_data.csv)")
 
-def main() -> None:
-    args = parse_args()
-    # Determine output model path
-    model_path: Optional[Path] = Path(args.model_output) if args.model_output else None
-    # Run training if requested
-    if args.train:
-        if args.data_dir is None:
-            raise SystemExit("--data-dir must be specified when training")
-        run_training(Path(args.data_dir), model_path)
-    # Run inference if requested
-    if args.infer:
-        if model_path is None or args.input_csv is None:
-            raise SystemExit("--model-output and --input-csv must be specified for inference")
-        run_inference_main(model_path, Path(args.input_csv))
-    # If neither flag is provided, print help
-    if not args.train and not args.infer:
-        print("No action specified. Use --train and/or --infer. See --help for details.")
+    args = parser.parse_args()
 
+    project_dir = args.project_dir
+    models_dir = project_dir / "models"
+    assets_dir = models_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
 
-if __name__ == "__main__":  # pragma: no cover
+    # Caminhos padrão
+    infer_input = args.inference_input or (project_dir / "data" / "external" / "synthetic_batch_input.csv")
+    infer_output = assets_dir / "inference_predictions.csv"
+    model_path = models_dir / "model_lgbm.joblib"
+
+    if args.mode in ["train", "all"]:
+        print("Etapa 1: Preparando os dados...")
+        app_json, pro_json, vag_json = run_prepare_data(project_dir)
+
+        print("Etapa 2: Feature engineering...")
+        df_final_csv, _ = run_feature_engineering(project_dir, app_json, pro_json, vag_json)
+
+        print("Etapa 3: Treinando o modelo...")
+        train_model(df_final_csv, models_dir)
+
+    if args.mode in ["predict", "all"]:
+        print("Etapa 4: Fazendo inferência em lote...")
+        if not model_path.exists():
+            print(f"[ERRO] Modelo não encontrado em {model_path}. Rode: python main.py --mode train")
+            raise SystemExit(2)
+        run_predict(project_dir, model_path, infer_input, infer_output)
+
+if __name__ == "__main__":
     main()

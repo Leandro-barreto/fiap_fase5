@@ -10,6 +10,7 @@ venv/
 env/
 .env/
 .coverage*
+.DS_Store
 
 # Environment variables
 .env.example

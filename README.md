@@ -6,7 +6,7 @@ Pipeline de ML para estimar a probabilidade de contratação (modelo **LightGBM*
 
 - [`api/`](api/README.md) – contém a implementação da API FastAPI. O README dessa pasta descreve as rotas, estrutura de diretórios e como executar a API localmente com uvicorn.  
 - [`data/`](data/README.md) – organização dos conjuntos de dados. Os dados brutos não são versionados; há um link para download via Google Drive.  
-- [`docker/`](docker/README.md) – orquestração Docker Compose com três serviços: API, Prometheus e Grafana. Explica o papel de cada serviço, dashboards pré‑configurados e comandos úteis como ```bash docker ps``` e ```bash docker system prune```
+- [`docker/`](docker/README.md) – orquestração Docker Compose com três serviços: API, Prometheus e Grafana. Explica o papel de cada serviço, dashboards pré‑configurados e comandos úteis como ``` docker ps``` e ``` docker system prune```
 - [`src/`](src/README.md) – código de preparação dos dados, extração de características (TF‑IDF, coeficiente de sobreposição, Jaccard etc.) e treinamento do modelo com LightGBM; também apresenta as métricas de desempenho e a curva ROC.  
 - [`unit/`](unit/README.md) – testes unitários com pytest, incluindo o comando de execução e o relatório de cobertura de código.  
 
@@ -14,11 +14,11 @@ Pipeline de ML para estimar a probabilidade de contratação (modelo **LightGBM*
 
 O arquivo main.py (na raiz) é um script de linha de comando que orquestra todas as etapas do pipeline:
 
-1. ```bash --mode train``` – executa a preparação dos dados e a engenharia de features em src/data/, depois treina o modelo com LightGBM e salva os artefatos.
+1. ``` --mode train``` – executa a preparação dos dados e a engenharia de features em src/data/, depois treina o modelo com LightGBM e salva os artefatos.
 
-2. ```bash --mode predict``` – carrega o modelo treinado e executa inferência em um arquivo CSV especificado pelo parâmetro --inference-input
+2. ``` --mode predict``` – carrega o modelo treinado e executa inferência em um arquivo CSV especificado pelo parâmetro --inference-input
 
-3. ```bash --mode all``` – executa a cadeia completa (treino e inferência) de ponta a ponta.
+3. ``` --mode all``` – executa a cadeia completa (treino e inferência) de ponta a ponta.
 
 ```bash
 # Treino completo (prepare + feature engineering + treino)

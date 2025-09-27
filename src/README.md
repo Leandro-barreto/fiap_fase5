@@ -57,4 +57,4 @@ Curva ROC (AUC=0.708):
 
 ## Saídas esperadas
 - `models/lgbm_model.joblib`
-- métricas e gráficos SHAP
+- métricas e gráficos

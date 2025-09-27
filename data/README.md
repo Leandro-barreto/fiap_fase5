@@ -13,4 +13,5 @@ Esta pasta armazena os datasets utilizados no projeto.  Por motivos de espaço e
 Os datasets brutos estão hospedados em um Google Drive compartilhado:  
 https://drive.google.com/drive/folders/1f3jtTRyOK-PBvND3JTPTAxHpnSrH7rFR
 
-Após o download, organize os arquivos nas subpastas adequadas (`external/`, `processed/`, `interim/`).
+Após o download, colocar os arquivos em  `external/`.
+Os demais arquivos são criados pelo pipeline, ou já estão no repositório do github.

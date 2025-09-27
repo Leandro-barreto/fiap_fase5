@@ -27,7 +27,7 @@ from src.models import infer as infer_mod
 router = APIRouter()
 
 def _model_path() -> Path:
-    return Path(os.getenv("MODEL_PATH", "models/lgbm_model.joblib")).resolve()
+    return Path(os.getenv("MODEL_PATH", "models/model_lgbm.joblib")).resolve()
 
 def _ensure_model_exists(p: Path) -> None:
     if not p.exists():

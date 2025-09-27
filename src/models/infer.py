@@ -107,31 +107,50 @@ def build_engineered_from_raw(cand: Dict[str, Any], vaga: Dict[str, Any]) -> pd.
     Usa funções utilitárias do módulo feature_engineering_simple.py.
     """
     # Geografia
-    cand_uf = cand.get("uf"); vaga_uf = vaga.get("uf")
-    cand_city = cand.get("cidade"); vaga_city = vaga.get("cidade")
+    # --- Normalização segura (None -> "", strip) ---
+    cand_uf   = (cand.get("uf") or "").strip()
+    vaga_uf   = (vaga.get("uf") or "").strip()
+    cand_city = (cand.get("cidade") or "").strip()
+    vaga_city = (vaga.get("cidade") or "").strip()
+
+    # --- Regiões: só calcula se houver UF; caso contrário, mantém None ---
+    cand_regiao = fe.uf_to_region(cand_uf.upper()) if cand_uf else None
+    vaga_regiao = fe.uf_to_region(vaga_uf.upper()) if vaga_uf else None
+
+    same_state = int(
+        bool(cand_uf) and bool(vaga_uf) and (cand_uf.upper() == vaga_uf.upper())
+    )
+    same_city = int(
+        same_state and bool(cand_city) and bool(vaga_city)
+        and (cand_city.lower() == vaga_city.lower())
+    )
+    same_region = int(
+        bool(cand_regiao) and bool(vaga_regiao) and (cand_regiao == vaga_regiao)
+    )
+
     out: Dict[str, Any] = {
         "cand_cidade": cand_city,
         "cand_uf": cand_uf,
-        "cand_regiao": fe.uf_to_region(cand_uf),
+        "cand_regiao": cand_regiao,
         "vaga_uf": vaga_uf,
         "vaga_cidade_unif": vaga_city,
-        "vaga_regiao": fe.uf_to_region(vaga_uf),
+        "vaga_regiao": vaga_regiao,
+        "same_state": same_state,
+        "same_city": same_city,
+        "same_region": same_region,
     }
-    out["same_state"]  = int((out["cand_uf"] and out["vaga_uf"]) and (str(out["cand_uf"]).upper()==str(out["vaga_uf"]).upper()))
-    out["same_city"]   = int(out["same_state"] and (str(out["cand_cidade"]).lower()==str(out["vaga_cidade_unif"]).lower()))
-    out["same_region"] = int((out["cand_regiao"] is not None) and (out["vaga_regiao"] is not None) and (out["cand_regiao"]==out["vaga_regiao"]))
 
     # Meets (a partir de níveis RAW)
-    cand_acad = fe.academic_rank(cand.get("nivel_academico"))
-    vaga_acad = fe.academic_rank(vaga.get("nivel_academico"))
+    cand_acad = fe.academic_rank((cand.get("nivel_academico") or "").strip())
+    vaga_acad = fe.academic_rank((vaga.get("nivel_academico")or "").strip())
     out["meets_academic"] = int(pd.notna(cand_acad) and pd.notna(vaga_acad) and (cand_acad >= vaga_acad))
 
-    cand_eng = fe.lang_rank(cand.get("nivel_ingles"))
-    vaga_eng = fe.lang_rank(vaga.get("nivel_ingles"))
+    cand_eng = fe.lang_rank((cand.get("nivel_ingles") or "").strip())
+    vaga_eng = fe.lang_rank((vaga.get("nivel_ingles") or "").strip())
     out["meets_english"] = int(pd.notna(cand_eng) and pd.notna(vaga_eng) and (cand_eng >= vaga_eng))
 
-    cand_esp = fe.lang_rank(cand.get("nivel_espanhol"))
-    vaga_esp = fe.lang_rank(vaga.get("nivel_espanhol"))
+    cand_esp = fe.lang_rank((cand.get("nivel_espanhol") or "").strip())
+    vaga_esp = fe.lang_rank((vaga.get("nivel_espanhol") or "").strip())
     out["meets_spanish"] = int(pd.notna(cand_esp) and pd.notna(vaga_esp) and (cand_esp >= vaga_esp))
 
     # Texto -> TF-IDF e overlap
@@ -144,7 +163,7 @@ def build_engineered_from_raw(cand: Dict[str, Any], vaga: Dict[str, Any]) -> pd.
 
     # Remuneração do candidato
     out["cand_remuneracao_num"] = cand.get("remuneracao_num")
-    if out["cand_remuneracao_num"] is None:
+    if out["cand_remuneracao_num"] is None or out["cand_remuneracao_num"]  == "":
         out["cand_remuneracao_num"] = fe.to_float_money(str(cand.get("remuneracao","")))
 
     # Tipo de contratação (vaga) e senioridade
@@ -164,6 +183,7 @@ def build_engineered_from_raw(cand: Dict[str, Any], vaga: Dict[str, Any]) -> pd.
 
 def load_model(model_path: Union[str, Path]) -> Pipeline:
     model_path = Path(model_path)
+    print(model_path)
     if not model_path.exists():
         raise FileNotFoundError(f"Modelo não encontrado: {model_path}")
     pipe = joblib.load(model_path)

@@ -167,7 +167,8 @@ def train_model(df: pd.DataFrame, output_dir: Path) -> None:
         random_state=RANDOM_STATE,
         n_jobs=-1,
         metric="auc",
-        scale_pos_weight=pos_weight
+        scale_pos_weight=pos_weight,
+        verbosity=-1
     )
     pipe_lgbm = Pipeline(steps=[("pre", preproc_tree), ("clf", lgbm)])
 

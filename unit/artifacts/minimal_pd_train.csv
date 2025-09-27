@@ -1,0 +1,99 @@
+,cand_cidade,cand_uf,cand_regiao,vaga_uf,vaga_cidade_unif,vaga_regiao,same_state,same_city,same_region,meets_academic,meets_english,meets_spanish,sim_tfidf,overlap_kw,jaccard_kw,cand_remuneracao_num,vaga_is_CLT,vaga_is_PJ,vaga_is_Estagiario,vaga_is_Cotas,cand_is_Junior,cand_is_Pleno,cand_is_Senior,vaga_is_Junior,vaga_is_Pleno,vaga_is_Senior,label_contratado
+2,São Paulo,SP,Sudeste,SP,São Paulo,Sudeste,True,True,True,False,True,True,0.1759457106230237,13.0,0.0229276895943562,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+3,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1537050160841894,11.0,0.0329341317365269,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+4,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3836481832091086,15.0,0.0371287128712871,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+5,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.2876397088585298,4.0,0.0444444444444444,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+6,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3972723965759475,7.0,0.0424242424242424,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+7,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3841694040717696,11.0,0.0361842105263157,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+8,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3974188404732584,13.0,0.0218487394957983,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+9,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0349279519285852,7.0,0.0265151515151515,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+10,Salvador,BA,Nordeste,SP,São Paulo,Sudeste,False,False,False,False,False,True,0.4042866195807361,10.0,0.0490196078431372,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+11,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3640220597062595,8.0,0.0444444444444444,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+12,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.4420823346065211,10.0,0.0193798449612403,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+13,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3517324027581683,9.0,0.0236220472440944,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+14,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1011229994219249,1.0,0.0357142857142857,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+15,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.381196315958699,12.0,0.0323450134770889,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+16,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.5574702601381538,11.0,0.0278481012658227,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+17,Belo Horizonte,MG,Sudeste,SP,São Paulo,Sudeste,False,False,True,False,False,True,0.5233862688324958,13.0,0.043046357615894,8000.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+18,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.5808055576306708,15.0,0.0460122699386503,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+19,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.6272688495042587,16.0,0.0531561461794019,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+20,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.4685292085950691,8.0,0.0547945205479452,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+21,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.530670033350657,10.0,0.043859649122807,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+22,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+23,,,,MG,Belo Horizonte,Sudeste,False,False,False,False,False,False,0.2730749333842567,8.0,0.0289855072463768,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+24,São Paulo,SP,Sudeste,MG,Belo Horizonte,Sudeste,False,False,True,True,True,True,0.2652917321011,5.0,0.0138888888888888,5132.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+25,Mogi das Cruzes,SP,Sudeste,MG,Belo Horizonte,Sudeste,False,False,True,False,True,True,0.3203900114601552,9.0,0.0209302325581395,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+26,,,,MG,Belo Horizonte,Sudeste,False,False,False,False,False,False,0.1538073707253062,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+27,São Bernardo do Campo,SP,Sudeste,MG,Nova Lima,Sudeste,False,False,True,True,True,True,0.1182942627104753,6.0,0.0178571428571428,6246.07,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+28,,,,MG,Nova Lima,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+29,,,,MG,Nova Lima,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+30,,,,MG,Nova Lima,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+31,,,,MG,Nova Lima,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+32,Belo Horizonte,MG,Sudeste,MG,Nova Lima,Sudeste,True,False,True,False,True,True,0.1166475770362431,3.0,0.0105263157894736,8500.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+33,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.28952278680271,9.0,0.0311418685121107,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+34,São Paulo,SP,Sudeste,SP,São Paulo,Sudeste,True,True,True,True,True,True,0.2292185014339957,7.0,0.0460526315789473,1650.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+35,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.4449336941263199,10.0,0.0571428571428571,10000.0,1.0,1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0
+36,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0782179315974674,10.0,0.0318471337579617,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+37,Guarujá,SP,Sudeste,SP,São Paulo,Sudeste,True,False,True,False,True,True,0.0627964765296674,6.0,0.0317460317460317,12000.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+38,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0830773573546443,12.0,0.02,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+39,Jundiaí,SP,Sudeste,SP,São Paulo,Sudeste,True,False,True,True,True,True,0.0644455930955781,9.0,0.0167910447761194,9000.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+40,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+41,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1954215506547867,6.0,0.0350877192982456,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+42,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.4023337393651334,13.0,0.0517928286852589,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+43,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.336620024027673,16.0,0.0401002506265664,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+44,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1102584770611033,1.0,0.0232558139534883,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+45,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0410693376727975,5.0,0.0141643059490084,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+46,São Gonçalo,RJ,Sudeste,SP,São Paulo,Sudeste,False,False,True,False,False,True,0.1491734779605199,17.0,0.0772727272727272,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+47,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.630790851660099,40.0,0.0871459694989106,,0.0,1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0
+48,Osasco,SP,Sudeste,SP,Barueri,Sudeste,True,False,True,False,True,True,0.6737161197386754,55.0,0.1059730250481695,9600.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+49,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.6205130276651855,54.0,0.0985401459854014,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+50,Vinhedo,SP,Sudeste,SP,Barueri,Sudeste,True,False,True,False,False,True,0.6032851133608222,39.0,0.0706521739130434,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+51,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.6174590489296703,47.0,0.1042128603104212,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+52,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.6550201507100158,45.0,0.0974025974025974,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+53,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.6020482402381905,39.0,0.1065573770491803,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+54,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.7081185112504087,57.0,0.1151515151515151,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+55,,,,SP,Barueri,Sudeste,False,False,False,False,False,False,0.2469482684071962,1.0,0.0060975609756097,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0
+56,Sorocaba,SP,Sudeste,SP,São Paulo,Sudeste,True,False,True,False,True,True,0.1832712557117238,4.0,0.0277777777777777,1300.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0
+57,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.2553165428888055,5.0,0.0234741784037558,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+58,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.2270272402533978,5.0,0.0168350168350168,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+59,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.2335632871797076,6.0,0.0267857142857142,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+60,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.2976028596285867,8.0,0.0330578512396694,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+61,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0382797692058688,5.0,0.0252525252525252,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0
+62,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0337571728464755,4.0,0.0152091254752851,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0
+63,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3138607814945567,10.0,0.0297619047619047,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+64,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.2907439081729207,7.0,0.0291666666666666,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+65,Brasília,DF,Centro-Oeste,SP,São Paulo,Sudeste,False,False,False,True,True,True,0.1599763766165965,9.0,0.032258064516129,10300.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+66,Brasília,DF,Centro-Oeste,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1513420777657638,7.0,0.0492957746478873,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+67,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.270563650627114,11.0,0.0474137931034482,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+68,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+69,,,,PR,Curitiba,Sul,False,False,False,False,False,False,0.3247359831524399,7.0,0.0362694300518134,10000.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+70,,,,PR,Curitiba,Sul,False,False,False,False,False,False,0.3388903572486174,15.0,0.0236593059936908,,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+71,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.5518276125718727,16.0,0.0529801324503311,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+72,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.4558515820941272,20.0,0.0743494423791821,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+73,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.5925096397417345,11.0,0.0447154471544715,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+74,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+75,Florianópolis,SC,Sul,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.6210379051815912,16.0,0.0586080586080586,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+76,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1718616132638312,1.0,0.0031545741324921,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+77,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1144436350055891,1.0,0.0030674846625766,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+78,,,,SP,Hortolândia,Sudeste,False,False,False,False,False,False,0.1066386762312049,2.0,0.00836820083682,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0
+79,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.6038509509294498,43.0,0.0655487804878048,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+80,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0
+81,Curitiba,PR,Sul,SP,São Paulo,Sudeste,False,False,False,True,True,True,0.6379413543221234,29.0,0.0781671159029649,5000.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+82,,,,SP,Hortolândia,Sudeste,False,False,False,False,False,False,0.0118237305256149,1.0,0.0025974025974025,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+83,São Paulo,SP,Sudeste,SP,Hortolândia,Sudeste,True,False,True,False,True,True,0.1129543960521226,3.0,0.0100671140939597,,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0
+84,São Paulo,SP,Sudeste,SP,São Paulo,Sudeste,True,True,True,False,True,True,0.4048364659762754,9.0,0.0219512195121951,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+85,Porto Alegre,RS,Sul,SP,São Paulo,Sudeste,False,False,False,False,True,True,0.4316617599193869,10.0,0.0308641975308641,6500.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+86,Brasília,DF,Centro-Oeste,SP,São Paulo,Sudeste,False,False,False,False,True,True,0.4443269545319709,13.0,0.0266940451745379,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+87,Taboão da Serra,SP,Sudeste,SP,São Paulo,Sudeste,True,False,True,False,True,False,0.4230265325008348,12.0,0.0571428571428571,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+88,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+89,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.4140429608555513,16.0,0.0489296636085626,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+90,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1577532760909606,11.0,0.0284974093264248,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+91,Rio de Janeiro,RJ,Sudeste,SP,São Paulo,Sudeste,False,False,True,False,False,True,0.1411413588768016,12.0,0.0317460317460317,20000.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+92,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.1088656630458374,9.0,0.039647577092511,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+93,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+94,Rio de Janeiro,RJ,Sudeste,SP,São Paulo,Sudeste,False,False,True,False,False,True,0.3336905002466463,3.0,0.0049751243781094,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+95,São Paulo,SP,Sudeste,SP,São Paulo,Sudeste,True,True,True,False,False,True,0.3697610184614257,4.0,0.014760147601476,13000.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+96,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.3503590760174054,4.0,0.0192307692307692,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+97,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.6239048872655231,55.0,0.0660264105642256,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+98,,,,SP,São Paulo,Sudeste,False,False,False,False,False,False,0.5876834598109067,44.0,0.0730897009966777,,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+99,São Paulo,SP,Sudeste,SP,São Paulo,Sudeste,True,True,True,False,False,True,0.5351313011254617,30.0,0.0983606557377049,14000.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

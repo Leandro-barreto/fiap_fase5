@@ -114,8 +114,9 @@ def tokenize_kw(s: str) -> List[str]:
     if not isinstance(s, str):
         return []
     s = s.lower()
-    s = re.sub(r"[^a-záéíóúâêôãõç0-9]+", " ", s)
-    return [t for t in s.split() if len(t) > 2]
+    s = re.sub(r"[^a-záéíóúâêôãõç0-9#]+", " ", s)
+    exceptions = {'c#', 'f#', 'go', 'r'}  # linguagens com nomes curtos
+    return [t for t in s.split() if len(t) > 2 or t in exceptions]
 
 def overlap_and_jaccard(a: str, b: str):
     A, B = set(tokenize_kw(a)), set(tokenize_kw(b))
@@ -176,8 +177,32 @@ def build_df_final(applicants_path: Path, prospects_path: Path, vagas_path: Path
     merged = merged[mask_ti_areas | mask_titles].copy()
 
     # Label
-    situ = merged.get("prop_situacao_candidato", "").astype(str)
-    merged["label_contratado"] = situ.str.contains(r"(Contratado|Aprovado)", case=False, regex=True).astype(int)
+    categorias_nao_contratado = [
+        "Não Aprovado pelo Cliente",
+        "Desistiu",
+        "Não Aprovado pelo RH",
+        "Não Aprovado pelo Requisitante",
+        "Não Aprovado pelo Requisitante",
+        "Recusado",
+    ]
+
+    categorias_contratado = [
+        "Contratado pela Decision",
+        "Contratado como Hunting",
+        "Aprovado",
+        "Encaminhar Proposta",
+        "Proposta Aceita",
+        "Documentação PJ",
+        "Documentação CLT",
+        "Documentação Cooperado",
+    ]
+
+    keep_label = categorias_contratado + categorias_nao_contratado
+
+    merged = merged[merged["prop_situacao_candidato"].isin(keep_label)]
+
+
+    merged["label_contratado"] = merged["prop_situacao_candidato"].isin(categorias_contratado).astype(int)
 
     # Geography
     cand_local = merged.get("cand_infos_basicas_local", "")
